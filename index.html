@@ -109,8 +109,8 @@ div.csl-indent {
   <li><a href="#r-как-калькулятор" id="toc-r-как-калькулятор" class="nav-link" data-scroll-target="#r-как-калькулятор">R как калькулятор</a></li>
   <li><a href="#создание-переменных" id="toc-создание-переменных" class="nav-link" data-scroll-target="#создание-переменных">Создание переменных</a></li>
   <li><a href="#пайпы" id="toc-пайпы" class="nav-link" data-scroll-target="#пайпы">Пайпы</a></li>
-  <li><a href="#чтение-текстовых-файлов" id="toc-чтение-текстовых-файлов" class="nav-link" data-scroll-target="#чтение-текстовых-файлов">Чтение текстовых файлов</a></li>
   <li><a href="#работа-с-пакетами" id="toc-работа-с-пакетами" class="nav-link" data-scroll-target="#работа-с-пакетами">Работа с пакетами</a></li>
+  <li><a href="#чтение-текстовых-файлов" id="toc-чтение-текстовых-файлов" class="nav-link" data-scroll-target="#чтение-текстовых-файлов">Чтение текстовых файлов</a></li>
   </ul></li>
   <li><a href="#работа-с-корпусом-текстов" id="toc-работа-с-корпусом-текстов" class="nav-link" data-scroll-target="#работа-с-корпусом-текстов">Работа с корпусом текстов</a>
   <ul class="collapse">
@@ -119,6 +119,7 @@ div.csl-indent {
   </ul></li>
   <li><a href="#анализ-частотности-n-gram" id="toc-анализ-частотности-n-gram" class="nav-link" data-scroll-target="#анализ-частотности-n-gram">Анализ частотности n-gram</a></li>
   <li><a href="#стопслова" id="toc-стопслова" class="nav-link" data-scroll-target="#стопслова">Стопслова</a></li>
+  <li><a href="#пакет-stopwords" id="toc-пакет-stopwords" class="nav-link" data-scroll-target="#пакет-stopwords">Пакет <code>stopwords</code></a></li>
   <li><a href="#мера-tf-idf" id="toc-мера-tf-idf" class="nav-link" data-scroll-target="#мера-tf-idf">Мера tf-idf</a></li>
   <li><a href="#анализ-коллокаций" id="toc-анализ-коллокаций" class="nav-link" data-scroll-target="#анализ-коллокаций">Анализ коллокаций</a></li>
   <li><a href="#кластеризация-авторов-на-основе-частотности-языковых-единиц" id="toc-кластеризация-авторов-на-основе-частотности-языковых-единиц" class="nav-link" data-scroll-target="#кластеризация-авторов-на-основе-частотности-языковых-единиц">Кластеризация авторов на основе частотности языковых единиц</a></li>
@@ -280,11 +281,191 @@ div.csl-indent {
 <section id="пайпы" class="level3">
 <h3 class="anchored" data-anchor-id="пайпы">Пайпы</h3>
 </section>
-<section id="чтение-текстовых-файлов" class="level3">
-<h3 class="anchored" data-anchor-id="чтение-текстовых-файлов">Чтение текстовых файлов</h3>
-</section>
 <section id="работа-с-пакетами" class="level3">
 <h3 class="anchored" data-anchor-id="работа-с-пакетами">Работа с пакетами</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.0
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.2     ✔ tidyr     1.3.1
+✔ purrr     1.0.1     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+</div>
+</section>
+<section id="чтение-текстовых-файлов" class="level3">
+<h3 class="anchored" data-anchor-id="чтение-текстовых-файлов">Чтение текстовых файлов</h3>
+<p>В пакете <code>readr</code> (входит в <code>tidyverse</code>) для чтения текста есть функция <code>read_lines()</code>. В качестве первой переменной может выступать путь к файлу на компьютере или интернет ссылка:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>alices_adventures_in_wonderland <span class="ot">&lt;-</span> <span class="fu">read_lines</span>(<span class="st">"https://raw.githubusercontent.com/agricolamz/daR4hs/main/data/w5_alices_adventures_in_wonderland.txt"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(alices_adventures_in_wonderland, <span class="dv">20</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "The Project Gutenberg eBook of Alice's Adventures in Wonderland"         
+ [2] "    "                                                                    
+ [3] "This ebook is for the use of anyone anywhere in the United States and"   
+ [4] "most other parts of the world at no cost and with almost no restrictions"
+ [5] "whatsoever. You may copy it, give it away or re-use it under the terms"  
+ [6] "of the Project Gutenberg License included with this ebook or online"     
+ [7] "at www.gutenberg.org. If you are not located in the United States,"      
+ [8] "you will have to check the laws of the country where you are located"    
+ [9] "before using this eBook."                                                
+[10] ""                                                                        
+[11] "Title: Alice's Adventures in Wonderland"                                 
+[12] ""                                                                        
+[13] ""                                                                        
+[14] "Author: Lewis Carroll"                                                   
+[15] ""                                                                        
+[16] "Release date: June 27, 2008 [eBook #11]"                                 
+[17] "                Most recently updated: March 30, 2021"                   
+[18] ""                                                                        
+[19] "Language: English"                                                       
+[20] ""                                                                        </code></pre>
+</div>
+</div>
+<p>В большинстве случаев, тексты получится считать, однако иногда при работе со старыми архивами могут возникнуть проблемы с кодировками, например, все тексты в старейшей интернет-библиотеке на русском языке — библиотеке Максима Машкова (<a href="lib.ru">lib.ru</a>) — записаны в <code>KOI8-R</code>:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_lines</span>(<span class="st">"https://raw.githubusercontent.com/agricolamz/daR4hs/main/data/w5_the_captains_daughter_koi8r.txt"</span>,</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">n_max =</span> <span class="dv">15</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] " \xe1\xcc\xc5\xcb\xd3\xc1\xce\xc4\xd2 \xf3\xc5\xd2\xc7\xc5\xc5\xd7\xc9\xde \xf0\xd5\xdb\xcb\xc9\xce. \xeb\xc1\xd0\xc9\xd4\xc1\xce\xd3\xcb\xc1\xd1 \xc4\xcf\xde\xcb\xc1"
+ [2] ""                                                                                                                                                                      
+ [3] " ---------------------------------------------------------------"                                                                                                      
+ [4] " OCR: \xef\xcc\xc5\xc7 \xeb\xcf\xcc\xc5\xd3\xce\xc9\xcb\xcf\xd7"                                                                                                       
+ [5] " Origin: http://www.magister.msk.ru/library/pushkin/pushkin.htm ? http://www.magister.msk.ru/library/pushkin/pushkin.htm"                                              
+ [6] " ---------------------------------------------------------------"                                                                                                      
+ [7] ""                                                                                                                                                                      
+ [8] " \xe2\xc5\xd2\xc5\xc7\xc9 \xde\xc5\xd3\xd4\xd8 \xd3\xcd\xcf\xcc\xcf\xc4\xd5."                                                                                          
+ [9] " \xf0\xcf\xd3\xcc\xcf\xd7\xc9\xc3\xc1"                                                                                                                                 
+[10] ""                                                                                                                                                                      
+[11] ""                                                                                                                                                                      
+[12] ""                                                                                                                                                                      
+[13] " \xe7\xec\xe1\xf7\xe1 I. \xf3\xe5\xf2\xf6\xe1\xee\xf4 \xe7\xf7\xe1\xf2\xe4\xe9\xe9."                                                                                   
+[14] ""                                                                                                                                                                      
+[15] ""                                                                                                                                                                      </code></pre>
+</div>
+</div>
+<p>В функциях пакета <code>readr</code> (т. е. не только <code>read_lines()</code>, но и в функциях <code>read_csv()</code>, <code>read_tsv()</code> и т. п.) есть аргумент <code>locale</code>, который позволяет эксплицитно указать кодировку, а при считывании происходит процесс конвертации в стандартный для многих операционных систем <code>UTF-8</code>. Для текстов на русском языке важны следующие кодировки</p>
+<ul>
+<li><code>KOI8-R</code>, а для украинского языка — <code>KOI8-U</code>;</li>
+<li><code>CP1251</code> (также известная под названием <code>Windows-1251</code>) покрывает и другие кириллические письменности такие как украинский, белорусский, болгарский, сербский, македонский и другие.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_lines</span>(<span class="st">"https://raw.githubusercontent.com/agricolamz/daR4hs/main/data/w5_the_captains_daughter_koi8r.txt"</span>,</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">locale =</span> <span class="fu">locale</span>(<span class="at">encoding =</span> <span class="st">"KOI8-R"</span>), </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">n_max =</span> <span class="dv">15</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] " Александр Сергеевич Пушкин. Капитанская дочка"                                                                          
+ [2] ""                                                                                                                        
+ [3] " ---------------------------------------------------------------"                                                        
+ [4] " OCR: Олег Колесников"                                                                                                   
+ [5] " Origin: http://www.magister.msk.ru/library/pushkin/pushkin.htm ? http://www.magister.msk.ru/library/pushkin/pushkin.htm"
+ [6] " ---------------------------------------------------------------"                                                        
+ [7] ""                                                                                                                        
+ [8] " Береги честь смолоду."                                                                                                  
+ [9] " Пословица"                                                                                                              
+[10] ""                                                                                                                        
+[11] ""                                                                                                                        
+[12] ""                                                                                                                        
+[13] " ГЛАВА I. СЕРЖАНТ ГВАРДИИ."                                                                                              
+[14] ""                                                                                                                        
+[15] ""                                                                                                                        </code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_lines</span>(<span class="st">"https://raw.githubusercontent.com/agricolamz/daR4hs/main/data/w5_the_captains_daughter_cp1251.txt"</span>,</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">locale =</span> <span class="fu">locale</span>(<span class="at">encoding =</span> <span class="st">"CP1251"</span>),</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">n_max =</span> <span class="dv">15</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] " Александр Сергеевич Пушкин. Капитанская дочка"                                                                          
+ [2] ""                                                                                                                        
+ [3] " ---------------------------------------------------------------"                                                        
+ [4] " OCR: Олег Колесников"                                                                                                   
+ [5] " Origin: http://www.magister.msk.ru/library/pushkin/pushkin.htm ? http://www.magister.msk.ru/library/pushkin/pushkin.htm"
+ [6] " ---------------------------------------------------------------"                                                        
+ [7] ""                                                                                                                        
+ [8] " Береги честь смолоду."                                                                                                  
+ [9] " Пословица"                                                                                                              
+[10] ""                                                                                                                        
+[11] ""                                                                                                                        
+[12] ""                                                                                                                        
+[13] " ГЛАВА I. СЕРЖАНТ ГВАРДИИ."                                                                                              
+[14] ""                                                                                                                        
+[15] ""                                                                                                                        </code></pre>
+</div>
+</div>
+<p>Для просмотра и изменения кодировки внутри R следует использовать функцию <code>Encoding()</code>:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="st">"fa</span><span class="sc">\xE7</span><span class="st">ile"</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "fa\xe7ile"</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Encoding</span>(x)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "unknown"</code></pre>
+</div>
+</div>
+<p>Теперь можем использовать функцию присваивания:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Encoding</span>(x) <span class="ot">&lt;-</span> <span class="st">"latin1"</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "façile"</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Encoding</span>(x)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "latin1"</code></pre>
+</div>
+</div>
+<p>Если необходимо преобразовать из одной кодировки в другую, следует использовать функцию <code>iconv()</code>:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">iconv</span>(x, <span class="st">"latin1"</span>, <span class="st">"UTF-8"</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Encoding</span>(x)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "UTF-8"</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "façile"</code></pre>
+</div>
+</div>
 </section>
 </section>
 <section id="работа-с-корпусом-текстов" class="level2">
@@ -301,6 +482,120 @@ div.csl-indent {
 </section>
 <section id="стопслова" class="level2">
 <h2 class="anchored" data-anchor-id="стопслова">Стопслова</h2>
+</section>
+<section id="пакет-stopwords" class="level2">
+<h2 class="anchored" data-anchor-id="пакет-stopwords">Пакет <code>stopwords</code></h2>
+<p>Выше мы упомянули, что в пакет <code>tidytext</code> встроен список английских стопслов. Стопслова для других язков можно раздобыть списки для других языков, используя пакет <code>stopwords</code>. Вместо имени языка, функция принимает ISO код языыка:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stopwords)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopwords</span>(<span class="st">"ru"</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  [1] "и"       "в"       "во"      "не"      "что"     "он"      "на"     
+  [8] "я"       "с"       "со"      "как"     "а"       "то"      "все"    
+ [15] "она"     "так"     "его"     "но"      "да"      "ты"      "к"      
+ [22] "у"       "же"      "вы"      "за"      "бы"      "по"      "только" 
+ [29] "ее"      "мне"     "было"    "вот"     "от"      "меня"    "еще"    
+ [36] "нет"     "о"       "из"      "ему"     "теперь"  "когда"   "даже"   
+ [43] "ну"      "вдруг"   "ли"      "если"    "уже"     "или"     "ни"     
+ [50] "быть"    "был"     "него"    "до"      "вас"     "нибудь"  "опять"  
+ [57] "уж"      "вам"     "сказал"  "ведь"    "там"     "потом"   "себя"   
+ [64] "ничего"  "ей"      "может"   "они"     "тут"     "где"     "есть"   
+ [71] "надо"    "ней"     "для"     "мы"      "тебя"    "их"      "чем"    
+ [78] "была"    "сам"     "чтоб"    "без"     "будто"   "человек" "чего"   
+ [85] "раз"     "тоже"    "себе"    "под"     "жизнь"   "будет"   "ж"      
+ [92] "тогда"   "кто"     "этот"    "говорил" "того"    "потому"  "этого"  
+ [99] "какой"   "совсем"  "ним"     "здесь"   "этом"    "один"    "почти"  
+[106] "мой"     "тем"     "чтобы"   "нее"     "кажется" "сейчас"  "были"   
+[113] "куда"    "зачем"   "сказать" "всех"    "никогда" "сегодня" "можно"  
+[120] "при"     "наконец" "два"     "об"      "другой"  "хоть"    "после"  
+[127] "над"     "больше"  "тот"     "через"   "эти"     "нас"     "про"    
+[134] "всего"   "них"     "какая"   "много"   "разве"   "сказала" "три"    
+[141] "эту"     "моя"     "впрочем" "хорошо"  "свою"    "этой"    "перед"  
+[148] "иногда"  "лучше"   "чуть"    "том"     "нельзя"  "такой"   "им"     
+[155] "более"   "всегда"  "конечно" "всю"     "между"  </code></pre>
+</div>
+</div>
+<p>Пакет предоставляет несколько источников списков:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stopwords_getsources</span>()</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "snowball"      "stopwords-iso" "misc"          "smart"        
+[5] "marimo"        "ancient"       "nltk"          "perseus"      </code></pre>
+</div>
+</div>
+<p>Давайте посмотрим какие языки сейчас доступны:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span>(<span class="fu">stopwords_getsources</span>(), stopwords_getlanguages)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+ [1] "da" "de" "en" "es" "fi" "fr" "hu" "ir" "it" "nl" "no" "pt" "ro" "ru" "sv"
+
+[[2]]
+ [1] "af" "ar" "hy" "eu" "bn" "br" "bg" "ca" "zh" "hr" "cs" "da" "nl" "en" "eo"
+[16] "et" "fi" "fr" "gl" "de" "el" "ha" "he" "hi" "hu" "id" "ga" "it" "ja" "ko"
+[31] "ku" "la" "lt" "lv" "ms" "mr" "no" "fa" "pl" "pt" "ro" "ru" "sk" "sl" "so"
+[46] "st" "es" "sw" "sv" "th" "tl" "tr" "uk" "ur" "vi" "yo" "zu"
+
+[[3]]
+[1] "ar" "ca" "el" "gu" "zh"
+
+[[4]]
+[1] "en"
+
+[[5]]
+[1] "en"    "de"    "ru"    "ar"    "he"    "zh_tw" "zh_cn" "ko"    "ja"   
+
+[[6]]
+[1] "grc" "la" 
+
+[[7]]
+ [1] "ar" "az" "da" "nl" "en" "fi" "fr" "de" "el" "hu" "id" "it" "kk" "ne" "no"
+[16] "pt" "ro" "ru" "sl" "es" "sv" "tg" "tr"
+
+[[8]]
+[1] "grc" "la" </code></pre>
+</div>
+</div>
+<p>Мы видим, что есть несколько источников для русского языка:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"snowball"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 159</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"stopwords-iso"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 559</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"marimo"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 333</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"nltk"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 151</code></pre>
+</div>
+</div>
 </section>
 <section id="мера-tf-idf" class="level2">
 <h2 class="anchored" data-anchor-id="мера-tf-idf">Мера tf-idf</h2>

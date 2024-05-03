@@ -88,9 +88,66 @@ sessionInfo()$R.version$version.string |> cat()
 
 ### Пайпы
 
+### Работа с пакетами
+
+```{r}
+library(tidyverse)
+```
+
 ### Чтение текстовых файлов
 
-### Работа с пакетами
+В пакете `readr` (входит в `tidyverse`) для чтения текста есть функция `read_lines()`. В качестве первой переменной может выступать путь к файлу на компьютере или интернет ссылка:
+
+```{r}
+alices_adventures_in_wonderland <- read_lines("https://raw.githubusercontent.com/agricolamz/daR4hs/main/data/w5_alices_adventures_in_wonderland.txt")
+head(alices_adventures_in_wonderland, 20)
+```
+
+В большинстве случаев, тексты получится считать, однако иногда при работе со старыми архивами могут возникнуть проблемы с кодировками, например, все тексты в старейшей интернет-библиотеке на русском языке --- библиотеке Максима Машкова ([lib.ru](lib.ru)) --- записаны в `KOI8-R`:
+
+```{r}
+read_lines("https://raw.githubusercontent.com/agricolamz/daR4hs/main/data/w5_the_captains_daughter_koi8r.txt",
+           n_max = 15)
+```
+
+В функциях пакета `readr` (т. е. не только `read_lines()`, но и в функциях `read_csv()`, `read_tsv()` и т. п.) есть аргумент `locale`, который позволяет эксплицитно указать кодировку, а при считывании происходит процесс конвертации в стандартный для многих операционных систем `UTF-8`. Для текстов на русском языке важны следующие кодировки
+
+- `KOI8-R`, а для украинского языка --- `KOI8-U`;
+- `CP1251` (также известная под названием `Windows-1251`) покрывает и другие кириллические письменности такие как украинский, белорусский, болгарский, сербский, македонский и другие.
+
+```{r}
+read_lines("https://raw.githubusercontent.com/agricolamz/daR4hs/main/data/w5_the_captains_daughter_koi8r.txt",
+           locale = locale(encoding = "KOI8-R"), 
+           n_max = 15)
+
+read_lines("https://raw.githubusercontent.com/agricolamz/daR4hs/main/data/w5_the_captains_daughter_cp1251.txt",
+           locale = locale(encoding = "CP1251"),
+           n_max = 15)
+```
+
+Для просмотра и изменения кодировки внутри R следует использовать функцию `Encoding()`:
+
+```{r}
+x <- "fa\xE7ile"
+x
+Encoding(x)
+```
+
+Теперь можем использовать функцию присваивания:
+
+```{r}
+Encoding(x) <- "latin1"
+x
+Encoding(x)
+```
+
+Если необходимо преобразовать из одной кодировки в другую, следует использовать функцию `iconv()`:
+
+```{r}
+x <- iconv(x, "latin1", "UTF-8")
+Encoding(x)
+x
+```
 
 ## Работа с корпусом текстов
 
@@ -101,6 +158,36 @@ sessionInfo()$R.version$version.string |> cat()
 ## Анализ частотности n-gram
 
 ## Стопслова
+
+## Пакет `stopwords`
+
+Выше мы упомянули, что в пакет `tidytext` встроен список английских стопслов. Стопслова для других язков можно раздобыть списки для других языков, используя пакет `stopwords`. Вместо имени языка, функция принимает ISO код языыка:
+
+```{r}
+library(stopwords)
+stopwords("ru")
+```
+
+Пакет предоставляет несколько источников списков:
+
+```{r}
+stopwords_getsources()
+```
+
+Давайте посмотрим какие языки сейчас доступны:
+
+```{r}
+map(stopwords_getsources(), stopwords_getlanguages)
+```
+
+Мы видим, что есть несколько источников для русского языка:
+
+```{r}
+length(stopwords("ru", source = "snowball"))
+length(stopwords("ru", source = "stopwords-iso"))
+length(stopwords("ru", source = "marimo"))
+length(stopwords("ru", source = "nltk"))
+```
 
 ## Мера tf-idf
 
