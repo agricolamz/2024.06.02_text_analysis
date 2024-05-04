@@ -89,6 +89,15 @@ div.csl-indent {
 <script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="index_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="index_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="index_files/libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet">
+<script src="index_files/libs/datatables-binding-0.32/datatables.js"></script>
+<script src="index_files/libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<link href="index_files/libs/dt-core-1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="index_files/libs/dt-core-1.13.6/css/jquery.dataTables.extra.css" rel="stylesheet">
+<script src="index_files/libs/dt-core-1.13.6/js/jquery.dataTables.min.js"></script>
+<link href="index_files/libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet">
+<script src="index_files/libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
 
 
 </head>
@@ -549,10 +558,118 @@ div.csl-indent {
 [26] "другой"      "от"          "ты"          "отвернуться"</code></pre>
 </div>
 </div>
+<p>Каждому элементу списка можно присвоить имя:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>cnames <span class="ot">&lt;-</span> <span class="fu">str_remove</span>(filenames, <span class="st">"</span><span class="sc">\\</span><span class="st">.txt"</span>)</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(corpus) <span class="ot">&lt;-</span> cnames</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Нажмите на объект в окружении, чтобы понять, что изменилось.</p>
 </section>
 </section>
 <section id="анализ-частотности-n-gram" class="level2">
 <h2 class="anchored" data-anchor-id="анализ-частотности-n-gram">Анализ частотности n-gram</h2>
+<p>В нашем корпусе текст уже разделен на отдельные слова (и знаки препинания), потому что предварительно мы его <em>лемматизировали</em>. Это значит, что все слова были автоматически приведены к начальной форме (лемме).</p>
+<p>Прежде чем их считать, удобно превратить объект <code>corpus</code> из списка в таблицу (tibble), чтобы можно было работать с использованием <code>tidyverse</code>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>corpus_tbl <span class="ot">&lt;-</span> corpus <span class="sc">%&gt;%</span> </span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stack</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(<span class="at">text =</span> ind, <span class="at">word =</span> values)</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(corpus_tbl)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+  text       word    
+  &lt;fct&gt;      &lt;chr&gt;   
+1 АЛКИВИАД I сын     
+2 АЛКИВИАД I Клиния  
+3 АЛКИВИАД I ,       
+4 АЛКИВИАД I я       
+5 АЛКИВИАД I полагать
+6 АЛКИВИАД I ,       </code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(corpus_tbl)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 740767</code></pre>
+</div>
+</div>
+<p>У нас получилась очень длинная таблица, в которой хранятся все слова для диалогов. Узнаем, сколько слов в каждом тексте:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>total <span class="ot">&lt;-</span> corpus_tbl <span class="sc">%&gt;%</span> </span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(text) <span class="sc">%&gt;%</span> </span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>total)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>DT<span class="sc">::</span><span class="fu">datatable</span>(total)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-2f505468ed529d1f7ad0" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-2f505468ed529d1f7ad0">{"x":{"filter":"none","vertical":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51"],["ГОРГИЙ","ТИМЕЙ","ТЕЭТЕТ","ФЕДОН","КРАТИЛ","ПРОТАГОР","ФИЛЕБ","ПИР","ФЕДР","СОФИСТ","ПОЛИТИК","ПАРМЕНИД","ЕВТИДЕМ","ЗАКОНЫ. КHИГА VII","АЛКИВИАД I","ГОСУДАРСТВО. КHИГА V","МЕНОН","ЗАКОНЫ. КHИГА VI","ГОСУДАРСТВО. КHИГА III","ГОСУДАРСТВО. КHИГА I","ЗАКОНЫ. КHИГА IX","АПОЛОГИЯ СОКРАТА","ХАРМИД","ГОСУДАРСТВО. КHИГА IV","ЗАКОНЫ. КHИГА XII","ГОСУДАРСТВО. КHИГА VI","ГИППИЙ БОЛЬШИЙ","ГОСУДАРСТВО. КHИГА X","ЗАКОНЫ. КHИГА X","ГОСУДАРСТВО. КHИГА VII","ГОСУДАРСТВО. КHИГА II","ЗАКОНЫ. КHИГА XI","ГОСУДАРСТВО. КHИГА VIII","ЛАХЕТ","ЛИСИД","ЗАКОНЫ. КHИГА I","ГОСУДАРСТВО. КHИГА IX","ЗАКОНЫ. КHИГА III","ЗАКОНЫ. КHИГА VIII","ЗАКОНЫ. КHИГА II","ЗАКОНЫ. КHИГА V","ПОСЛЕЗАКОНИЕ","ЗАКОНЫ. КHИГА IV","ЕВТИФРОН","МЕНЕКСЕН","КРИТИЙ","АЛКИВИАД II","КРИТОН","ГИППИЙ МЕНЬШИЙ","ФЕАГ","ИОН"],[36953,32159,31886,30232,26970,23937,23769,23363,22803,22739,22380,21868,18303,15690,15476,14774,13974,13831,13640,13633,13231,12687,12502,12471,12440,12359,12334,12209,12060,12036,11805,11773,11424,10519,10469,10461,10021,9968,9779,9387,8875,8540,8169,7056,6455,6025,5892,5848,5743,4935,4914]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>text<\/th>\n      <th>total<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"text","targets":1},{"name":"total","targets":2}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<p>Нам осталось посчитать частотность для каждого слова и разделить на общее число слов. Таким образом мы узнаем относительную частотность (tf) для каждого слова, и сможем отобрать наиболее частотные или, наоборот, редкие слова. Перед этим имеет смысл перевести все слова в нижний регистр. Обратите внимание, что таблица <code>corpus_counts</code> уже не такая длинная, как <code>corpus_tbl</code>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>corpus_counts <span class="ot">&lt;-</span> corpus_tbl <span class="sc">%&gt;%</span> </span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(text, word) <span class="sc">%&gt;%</span> </span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>n)</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(corpus_counts)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+  text   word      n
+  &lt;fct&gt;  &lt;chr&gt; &lt;int&gt;
+1 ГОРГИЙ ,      4945
+2 ФЕДОН  ,      3891
+3 ТЕЭТЕТ ,      3836
+4 ТИМЕЙ  ,      3604
+5 ПИР    ,      3166
+6 КРАТИЛ ,      3110</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(corpus_counts)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 99221</code></pre>
+</div>
+</div>
+<p>Ожидаемо среди самых частотных единиц оказались знаки препинания, но нам они не интересны. Поэтому просто избавимся от всех рядов с пунктуацией.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>corpus_counts <span class="ot">&lt;-</span> corpus_counts <span class="sc">%&gt;%</span> </span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">str_detect</span>(word, <span class="st">"[[:punct:]&lt;&gt;]"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>n)</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(corpus_counts)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+  text     word      n
+  &lt;fct&gt;    &lt;chr&gt; &lt;int&gt;
+1 ГОРГИЙ   и      1520
+2 ТИМЕЙ    и      1420
+3 ФЕДОН    и      1241
+4 ТЕЭТЕТ   и      1197
+5 ПИР      и       973
+6 ПРОТАГОР и       953</code></pre>
+</div>
+</div>
 </section>
 <section id="стопслова" class="level2">
 <h2 class="anchored" data-anchor-id="стопслова">Стопслова</h2>
@@ -563,8 +680,8 @@ div.csl-indent {
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Код</summary>
-<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stopwords)</span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopwords</span>(<span class="st">"ru"</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stopwords)</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopwords</span>(<span class="st">"ru"</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>  [1] "и"       "в"       "во"      "не"      "что"     "он"      "на"     
@@ -596,7 +713,7 @@ div.csl-indent {
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Код</summary>
-<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stopwords_getsources</span>()</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stopwords_getsources</span>()</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "snowball"      "stopwords-iso" "misc"          "smart"        
@@ -607,7 +724,7 @@ div.csl-indent {
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Код</summary>
-<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span>(<span class="fu">stopwords_getsources</span>(), stopwords_getlanguages)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">map</span>(<span class="fu">stopwords_getsources</span>(), stopwords_getlanguages)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
@@ -643,28 +760,28 @@ div.csl-indent {
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Код</summary>
-<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"snowball"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"snowball"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 159</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Код</summary>
-<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"stopwords-iso"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"stopwords-iso"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 559</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Код</summary>
-<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"marimo"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"marimo"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 333</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Код</summary>
-<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"nltk"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"nltk"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 151</code></pre>
