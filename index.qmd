@@ -171,33 +171,25 @@ getwd()
 
 Изменить рабочую директорию можно из панели инструментов (вкладка `Session`, `Set Working Directory`) или при помощи функции `setwd()`, указав в качестве аргумента путь к рабочей директории на вашем компьютере (в кавычках, так как это символьный вектор). 
 
-Загрузите в вашу рабочую директорию файлы с корпусом текстов Платона. Их можно найти по [ссылке](https://github.com/agricolamz/2024.06.02_text_analysis/blob/main/data.zip).  
+Загрузите в вашу рабочую директорию файлы с корпусом текстов Платона. Их можно найти по [ссылке](https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/data.zip).  
 
-![](images/download_zip.png)
 
 Папка `data` содержит две вложенные: `plato_w` c переводами Платона и `plato_l` с лемматизированными текстами. Нам понадобятся обе, поместите `data` со всем содержимым в рабочую директорию. 
 
 Узнаем, какие файлы лежат в папке `plato_l`:
 
 ```{r}
-filenames <- list.files("./data/plato_l") 
+filenames <- list.files("./data/plato_l", full.names = TRUE) 
 head(filenames) 
 length(filenames)
 ```
 
-Объект `filenames` -- это символьный вектор, в котором 51 элемент. В нем хранятся названия файлов с диалогами. Функция `head()` выводит только первые шесть названий.
+Объект `filenames` -- это символьный вектор, в котором 51 элемент. В нем хранятся пути до файлов с диалогами. Функция `head()` выводит только первые шесть элементов
 
-Теперь наша задача -- прочитать их все в R, чтобы можно было посчитать частотности. Для этого сначала превратим имена в пути.
-
-```{r}
-filepaths <- file.path("data", "plato_l", filenames)
-head(filepaths)
-```
-
-Теперь нам нужен цикл, который продется по всем файлам и соберет оттуда текст. 
+Теперь наша задача -- прочитать их все в R, чтобы можно было посчитать частотности. Для этого нужен цикл, который продется по всем файлам и соберет оттуда текст. 
 
 ```{r}
-corpus <- map(filepaths, read_lines)
+corpus <- map(filenames, read_lines)
 ```
 
 Теперь у вас в окружении появился список `corpus`, в котором 51 элемент, по числу файлов. Достать любой элемент из списка и посмотреть на него можно по индексу. Текст большой, поэтому снова выведем только начало.
@@ -209,7 +201,8 @@ head(corpus[[1]], 29)
 Каждому элементу списка можно присвоить имя:
 
 ```{r}
-cnames <- str_remove(filenames, "\\.txt")
+cnames <- list.files("./data/plato_l", full.names = FALSE) |> 
+  str_remove("\\.txt")
 
 names(corpus) <- cnames
 ```
@@ -223,9 +216,9 @@ names(corpus) <- cnames
 Прежде чем их считать, удобно превратить объект `corpus` из списка в таблицу (tibble), чтобы можно было работать с использованием `tidyverse`.
 
 ```{r}
-corpus_tbl <- corpus %>% 
-  stack() %>% 
-  as_tibble() %>% 
+corpus_tbl <- corpus  |> 
+  stack() |> 
+  as_tibble() |>  
   transmute(text = ind, word = values)
 
 head(corpus_tbl)
@@ -235,7 +228,7 @@ nrow(corpus_tbl)
 У нас получилась очень длинная таблица, в которой хранятся все слова и знаки препинания для диалогов. Знаки препинания нам не интересны, поэтому сразу от них избавимся.
 
 ```{r}
-corpus_tbl <- corpus_tbl %>% 
+corpus_tbl <- corpus_tbl |>  
   filter(!str_detect(word, "[[:punct:]<>]")) 
 ```
 
@@ -243,9 +236,9 @@ corpus_tbl <- corpus_tbl %>%
 Узнаем, сколько слов в каждом тексте:
 
 ```{r}
-total <- corpus_tbl %>% 
-  group_by(text) %>% 
-  summarise(total = n()) %>% 
+total <- corpus_tbl |>  
+  group_by(text) |> 
+  summarise(total = n()) |> 
   arrange(-total)
 
 total
@@ -254,8 +247,8 @@ total
 Нам осталось посчитать частотность для каждого слова и разделить на общее число слов. Таким образом мы узнаем относительную частотность (tf) для каждого слова, и сможем отобрать наиболее частотные или, наоборот, редкие слова. Обратите внимание, что таблица `corpus_counts` уже не такая длинная, как `corpus_tbl`.
 
 ```{r}
-corpus_counts <- corpus_tbl %>% 
-  count(text, word) %>% 
+corpus_counts <- corpus_tbl |>  
+  count(text, word) |> 
   arrange(-n)
 
 head(corpus_counts)
@@ -267,7 +260,7 @@ nrow(corpus_counts)
 Соединим две таблицы.
 
 ```{r}
-corpus_tf <- corpus_counts %>% 
+corpus_tf <- corpus_counts |> 
   left_join(total)
 
 corpus_tf
@@ -276,8 +269,8 @@ corpus_tf
 Теперь добавим новый столбец:
 
 ```{r}
-corpus_tf <- corpus_tf %>% 
-  mutate(tf = n / total) %>% 
+corpus_tf <- corpus_tf |> 
+  mutate(tf = n / total) |> 
   arrange(-tf)
 
 corpus_tf
@@ -287,14 +280,14 @@ corpus_tf
 
 ```{r}
 library(tidytext)
-corpus_tf %>% 
-  filter(text %in% c("ГОРГИЙ", "ТИМЕЙ", "СОФИСТ")) %>% 
-  group_by(text) %>% 
-  slice_max(order_by = tf, n = 10) %>% 
-  ungroup() %>% 
+corpus_tf |> 
+  filter(text %in% c("timey", "teetet", "gorgiy")) |> 
+  group_by(text) |> 
+  slice_max(order_by = tf, n = 10) |> 
+  ungroup() |> 
   ggplot(aes(reorder_within(word, tf, text),
              tf, fill = text)) +
-  geom_bar(stat="identity", show.legend = F) +
+  geom_bar(stat="identity", show.legend = FALSE) +
   facet_wrap(~ text, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
@@ -336,6 +329,7 @@ length(stopwords("ru", source = "nltk"))
 ```
 
 ## Мера tf-idf
+
 
 ## Анализ коллокаций
 
