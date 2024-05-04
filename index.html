@@ -117,9 +117,12 @@ div.csl-indent {
   <li><a href="#tidy-формат" id="toc-tidy-формат" class="nav-link" data-scroll-target="#tidy-формат"><code>tidy</code>-формат</a></li>
   <li><a href="#считываем-наш-корпус" id="toc-считываем-наш-корпус" class="nav-link" data-scroll-target="#считываем-наш-корпус">Считываем наш корпус</a></li>
   </ul></li>
-  <li><a href="#анализ-частотности-n-gram" id="toc-анализ-частотности-n-gram" class="nav-link" data-scroll-target="#анализ-частотности-n-gram">Анализ частотности n-gram</a></li>
-  <li><a href="#стопслова" id="toc-стопслова" class="nav-link" data-scroll-target="#стопслова">Стопслова</a></li>
-  <li><a href="#пакет-stopwords" id="toc-пакет-stopwords" class="nav-link" data-scroll-target="#пакет-stopwords">Пакет <code>stopwords</code></a></li>
+  <li><a href="#анализ-частотности" id="toc-анализ-частотности" class="nav-link" data-scroll-target="#анализ-частотности">Анализ частотности</a>
+  <ul class="collapse">
+  <li><a href="#униграммы" id="toc-униграммы" class="nav-link" data-scroll-target="#униграммы">Униграммы</a></li>
+  <li><a href="#стопслова-и-пакет-stopwords" id="toc-стопслова-и-пакет-stopwords" class="nav-link" data-scroll-target="#стопслова-и-пакет-stopwords">Стопслова и пакет <code>stopwords</code></a></li>
+  <li><a href="#удалим-стоп-слова" id="toc-удалим-стоп-слова" class="nav-link" data-scroll-target="#удалим-стоп-слова">Удалим стоп слова</a></li>
+  </ul></li>
   <li><a href="#мера-tf-idf" id="toc-мера-tf-idf" class="nav-link" data-scroll-target="#мера-tf-idf">Мера tf-idf</a></li>
   <li><a href="#анализ-коллокаций" id="toc-анализ-коллокаций" class="nav-link" data-scroll-target="#анализ-коллокаций">Анализ коллокаций</a></li>
   <li><a href="#кластеризация-авторов-на-основе-частотности-языковых-единиц" id="toc-кластеризация-авторов-на-основе-частотности-языковых-единиц" class="nav-link" data-scroll-target="#кластеризация-авторов-на-основе-частотности-языковых-единиц">Кластеризация авторов на основе частотности языковых единиц</a></li>
@@ -313,11 +316,11 @@ div.csl-indent {
 </section>
 <section id="работа-с-пакетами" class="level3">
 <h3 class="anchored" data-anchor-id="работа-с-пакетами">Работа с пакетами</h3>
-<p>Все богатство R находиться в его огромной инфраструктуре пакетов, которые может разрабатывать кто угодно. Для сегодняшнего занятия нам понадобиться всего три: <code>tidyverse</code>, <code>tidytext</code>, <code>word2vec</code>. Чтобы их установить нужно использовать команду</p>
+<p>Все богатство R находиться в его огромной инфраструктуре пакетов, которые может разрабатывать кто угодно. Для сегодняшнего занятия нам понадобиться следующие пакеты: <code>tidyverse</code>, <code>tidytext</code>, <code>stopwords</code> <code>word2vec</code>. Чтобы их установить нужно использовать команду</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Код</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"tidytext"</span>, <span class="st">"word2vec"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"tidytext"</span>, <span class="st">"stopwords"</span>, <span class="st">"word2vec"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Помните, что если вы установили пакет, это не значит, что функции пакета вам доступны. Пакет еще нужно включить</p>
@@ -438,8 +441,10 @@ div.csl-indent {
 <p>Нажмите на объект в окружении, чтобы понять, что изменилось.</p>
 </section>
 </section>
-<section id="анализ-частотности-n-gram" class="level2">
-<h2 class="anchored" data-anchor-id="анализ-частотности-n-gram">Анализ частотности n-gram</h2>
+<section id="анализ-частотности" class="level2">
+<h2 class="anchored" data-anchor-id="анализ-частотности">Анализ частотности</h2>
+<section id="униграммы" class="level3">
+<h3 class="anchored" data-anchor-id="униграммы">Униграммы</h3>
 <p>В нашем корпусе текст уже разделен на отдельные слова (и знаки препинания), потому что предварительно мы его <em>лемматизировали</em>. Это значит, что все слова были автоматически приведены к начальной форме (лемме).</p>
 <p>Прежде чем их считать, удобно превратить объект <code>corpus</code> из списка в таблицу (tibble), чтобы можно было работать с использованием <code>tidyverse</code>.</p>
 <div class="cell">
@@ -623,12 +628,9 @@ div.csl-indent {
 </div>
 <p>В некоторых случаях (например, для кластеризации), такие служебные слова нужны, потому что они относительно независимы от тематики. В других случаях (например, для тематического моделирования) от них лучше избавиться. Это можно сделать двумя способами: либо механически удалить стоп-слова, либо отобрать лексику на основе tf_idf.</p>
 </section>
-<section id="стопслова" class="level2">
-<h2 class="anchored" data-anchor-id="стопслова">Стопслова</h2>
-</section>
-<section id="пакет-stopwords" class="level2">
-<h2 class="anchored" data-anchor-id="пакет-stopwords">Пакет <code>stopwords</code></h2>
-<p>Выше мы упомянули, что в пакет <code>tidytext</code> встроен список английских стопслов. Стопслова для других язков можно раздобыть списки для других языков, используя пакет <code>stopwords</code>. Вместо имени языка, функция принимает ISO код языыка:</p>
+<section id="стопслова-и-пакет-stopwords" class="level3">
+<h3 class="anchored" data-anchor-id="стопслова-и-пакет-stopwords">Стопслова и пакет <code>stopwords</code></h3>
+<p>Стопслова для других язков можно раздобыть списки для других языков, используя пакет <code>stopwords</code>. Вместо имени языка, функция принимает ISO код языыка:</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Код</summary>
@@ -739,6 +741,39 @@ div.csl-indent {
 <pre><code>[1] 151</code></pre>
 </div>
 </div>
+</section>
+<section id="удалим-стоп-слова" class="level3">
+<h3 class="anchored" data-anchor-id="удалим-стоп-слова">Удалим стоп слова</h3>
+<p>Давайте теперь удалим стопслова и посмотрим на частотные слова в диалогах:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Код</summary>
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>corpus_tf <span class="sc">|&gt;</span> </span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(text <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"timey"</span>, <span class="st">"teetet"</span>, <span class="st">"gorgiy"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(<span class="fu">tibble</span>(<span class="at">word =</span> <span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"stopwords-iso"</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(text) <span class="sc">|&gt;</span> </span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="at">order_by =</span> tf, <span class="at">n =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="fu">reorder_within</span>(word, tf, text),</span>
+<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>             tf, <span class="at">fill =</span> text)) <span class="sc">+</span></span>
+<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat=</span><span class="st">"identity"</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> text, <span class="at">scales =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
+<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb68-12"><a href="#cb68-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_reordered</span>() <span class="sc">+</span></span>
+<span id="cb68-13"><a href="#cb68-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="cn">NULL</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Joining with `by = join_by(word)`</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
 </section>
 <section id="мера-tf-idf" class="level2">
 <h2 class="anchored" data-anchor-id="мера-tf-idf">Мера tf-idf</h2>
