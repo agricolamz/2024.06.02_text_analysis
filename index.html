@@ -286,9 +286,9 @@ div.csl-indent {
 </section>
 <section id="работа-с-пакетами" class="level3" data-number="1.6">
 <h3 data-number="1.6" class="anchored" data-anchor-id="работа-с-пакетами"><span class="header-section-number">1.6</span> Работа с пакетами</h3>
-<p>Все богатство R находиться в его огромной инфраструктуре пакетов, которые может разрабатывать кто угодно. Для сегодняшнего занятия нам понадобиться следующие пакеты: <code>tidyverse</code>, <code>tidytext</code>, <code>stopwords</code> <code>word2vec</code>. Чтобы их установить нужно использовать команду</p>
+<p>Все богатство R находиться в его огромной инфраструктуре пакетов, которые может разрабатывать кто угодно. Для сегодняшнего занятия нам понадобиться следующие пакеты: <code>tidyverse</code>, <code>tidytext</code>, <code>stopwords</code>, <code>word2vec</code>, <code>uwot</code>. Чтобы их установить нужно использовать команду</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"tidytext"</span>, <span class="st">"stopwords"</span>, <span class="st">"word2vec"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"tidytext"</span>, <span class="st">"stopwords"</span>, <span class="st">"word2vec"</span>, <span class="st">"uwot"</span>))</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Помните, что если вы установили пакет, это не значит, что функции пакета вам доступны. Пакет еще нужно включить</p>
 <p><img src="images/03_install_packages.png" class="img-fluid"></p>
@@ -742,12 +742,11 @@ Attaching package: 'Matrix'</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggrepel)</span>
-<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">word =</span> <span class="fu">rownames</span>(embedding), </span>
-<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> viz[, <span class="dv">1</span>], </span>
-<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> viz[, <span class="dv">2</span>]) <span class="sc">|&gt;</span> </span>
-<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">label =</span> word)) <span class="sc">+</span> </span>
-<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">size =</span> <span class="dv">2</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">word =</span> <span class="fu">rownames</span>(embedding), </span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> viz[, <span class="dv">1</span>], </span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> viz[, <span class="dv">2</span>]) <span class="sc">|&gt;</span> </span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">label =</span> word)) <span class="sc">+</span> </span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">size =</span> <span class="dv">2</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
