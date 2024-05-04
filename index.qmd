@@ -8,8 +8,8 @@ date: today
 date-format: D.MM.YYYY
 format: html
 editor: source
-code-fold: show
 lang: ru
+number-sections: true
 bibliography: references.bib
 toc: true
 abstract: >
@@ -20,7 +20,13 @@ abstract: >
   и историко-культурных исследованиях. Опыт программирования не требуется.
 ---
 
-## Введение
+```{r}
+#| include: false
+
+library(tidyverse)
+theme_set(theme_minimal())
+```
+
 
 ## Введение в R
 
