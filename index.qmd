@@ -7,8 +7,11 @@ author:
 date: today
 date-format: D.MM.YYYY
 format: html
+execute:
+  message: false
 editor: source
 lang: ru
+df-print: paged
 number-sections: true
 bibliography: references.bib
 toc: true
@@ -18,6 +21,8 @@ abstract: >
   анализ частотности, векторизация и кластеризация. Кроме того, обсудим, какие 
   научные задачи могут решаться при помощи этих методов в историко-философских 
   и историко-культурных исследованиях. Опыт программирования не требуется.
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -340,11 +345,47 @@ corpus_tf |>
   xlab(NULL)
 ```
 
-## Мера tf-idf
+### Анализа биграм
 
+## Мера tf-idf
 
 ## Анализ коллокаций
 
 ## Кластеризация авторов на основе частотности языковых единиц
 
 ## Векторизация
+
+```{r}
+set.seed(20240602)
+library(word2vec)
+model <- word2vec(x = corpus_tbl$word)
+embedding <- as.matrix(model)
+dim(embedding)
+predict(model, c("Сократ", "тело", "долг"), type = "nearest", top_n = 10) |> 
+  bind_rows()
+```
+
+Получившуюся модель можно визуализировать. Для этого многомерное пространство нужно уменьшить до двух. Мы будем использовать алгоритм UMAP:
+
+```{r umap}
+#| cache: true
+
+library(uwot)
+viz <- umap(embedding, n_neighbors = 15, n_threads = 2)
+dim(viz)
+```
+
+
+```{r}
+#| fig-width: 15
+#| fig-height: 15
+
+library(ggrepel)
+tibble(word = rownames(embedding), 
+       x = viz[, 1], 
+       y = viz[, 2]) |> 
+  ggplot(aes(x = x, y = y, label = word)) + 
+  geom_text(size = 2)
+```
+
+## Ссылки {.unnumbered}
