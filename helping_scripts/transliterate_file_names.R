@@ -1,3 +1,4 @@
+setwd("/home/agricolamz/work/materials/2024.06.02_text_analysis")
 library(tidyverse)
 list.files(path = "data/plato_w/")
 
@@ -28,11 +29,15 @@ list.files(path = "data/plato_w", full.names = TRUE) |>
   tolower() |> 
   str_replace_all(" ", "_") |> 
   str_replace_all("\\._", "_") |>
-  str_remove_all("_khiga") -> 
-  rename_to_me
-
+  str_remove_all("_khiga") |> 
+  file.rename(from = list.files(path = "data/plato_w", full.names = TRUE),
+              to = _)
+  
 list.files(path = "data/plato_l", full.names = TRUE) |> 
-  file.rename(rename_to_me)
-
-list.files(path = "data/plato_w", full.names = TRUE) |> 
-  file.rename(rename_to_me)
+  stringi::stri_trans_general(trans_rules, rules=TRUE) |> 
+  tolower() |> 
+  str_replace_all(" ", "_") |> 
+  str_replace_all("\\._", "_") |>
+  str_remove_all("_khiga") |> 
+  file.rename(from = list.files(path = "data/plato_l", full.names = TRUE),
+              to = _)
