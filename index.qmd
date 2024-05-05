@@ -160,7 +160,7 @@ head(ion, 20)
 
 Тексты на сайте приводятся по изданию: Платон. Сочинения в 4 тт. Под общей редакцией А. Ф. Лосева, В. Ф. Асмуса и А. А. Тахо-Годи. Серия «Философское наследие». 1990-1994.
 
-Прежде чем сложить их в папку, мы удалили все латинские и греческие символы, цифры, а также все примечания. Код для этой предварительной "уборки", если хотите, тоже можете посмотреть ([здесь](https://github.com/agricolamz/2024.06.02_text_analysis/blob/main/helping_scripts/cleanTexts.R)).
+Прежде чем сложить их в папку, мы удалили все латинские и греческие символы, цифры, а также все примечания. Код для этой предварительной "уборки" [здесь](https://github.com/agricolamz/2024.06.02_text_analysis/blob/main/helping_scripts/cleanTexts.R).
 
 В итоге у нас получился корпус из 51 текста: это 31 текст из числа 36, входящих в тетралогии (без Писем, "Соперников", "Миноса", "Гиппарха" и "Клитофонта"),  при этом "Государство" и "Законы" разбиты по книгам (10 и 12, соответственно). Диалогов, не вошедших в тетралогии (так называемых spuria из Appendix Platonica), здесь тоже нет. 
 
@@ -203,7 +203,7 @@ getwd()
 
 Изменить рабочую директорию можно из панели инструментов (вкладка `Session`, `Set Working Directory`) или при помощи функции `setwd()`, указав в качестве аргумента путь к рабочей директории на вашем компьютере (в кавычках, так как это символьный вектор). 
 
-Загрузите в вашу рабочую директорию файлы с корпусом текстов Платона. Их можно найти по [ссылке](https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/data.zip).  
+Загрузите в вашу рабочую директорию папку с корпусом текстов Платона. Ее можно найти по [ссылке](https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/data.zip).  
 
 
 Папка `data` содержит две вложенные: `plato_w` c переводами Платона и `plato_l` с _лемматизированными_ текстами. Нам понадобятся обе, поместите `data` со всем содержимым в рабочую директорию. 
@@ -214,10 +214,10 @@ getwd()
 :::
 
 
-Для начала узнаем, какие файлы лежат в папке `plato_l`:
+Для начала узнаем, какие файлы лежат в папке `plato_w`:
 
 ```{r}
-filenames <- list.files("./data/plato_l", full.names = TRUE) 
+filenames <- list.files("./data/plato_w", full.names = TRUE) 
 head(filenames) 
 length(filenames)
 ```
@@ -233,13 +233,13 @@ corpus <- map(filenames, read_lines)
 Теперь у вас в окружении появился список `corpus`, в котором 51 элемент, по числу файлов. Достать любой элемент из списка и посмотреть на него можно по индексу. Текст большой, поэтому снова выведем только начало.
 
 ```{r}
-head(corpus[[1]], 29)
+corpus[[1]]
 ```
 
 Каждому элементу списка можно присвоить имя:
 
 ```{r}
-cnames <- list.files("./data/plato_l", full.names = FALSE) |> 
+cnames <- list.files("./data/plato_w", full.names = FALSE) |> 
   str_remove("\\.txt")
 
 names(corpus) <- cnames
@@ -251,32 +251,33 @@ names(corpus) <- cnames
 
 ### Униграммы
 
-В нашем корпусе текст уже разделен на отдельные слова (и знаки препинания), 
-
-Прежде чем их считать, удобно превратить объект `corpus` из списка в таблицу (tibble), чтобы можно было работать с использованием `tidyverse`.
+Прежде всего превратим объект `corpus` из списка в таблицу (tibble), чтобы можно было работать с использованием `tidyverse`.
 
 ```{r}
 corpus_tbl <- corpus  |> 
   stack() |> 
   as_tibble() |>  
-  transmute(text = ind, word = values)
+  transmute(id = ind, text = values)
 
 head(corpus_tbl)
 nrow(corpus_tbl)
 ```
 
-У нас получилась очень длинная таблица, в которой хранятся все слова и знаки препинания для диалогов. Знаки препинания нам не интересны, поэтому сразу от них избавимся.
+У нас получилась таблица, в которой хранятся тексты диалогов. Разобьем каждый текст на слова. Теперь наши данные хранятся в опрятном виде.
 
 ```{r}
-corpus_tbl <- corpus_tbl |>  
-  filter(!str_detect(word, "[[:punct:]<>]")) 
+library(tidytext)
+corpus_w <- corpus_tbl |> 
+  unnest_tokens(word, text) 
+
+corpus_w
 ```
 
 Узнаем, сколько слов в каждом тексте:
 
 ```{r}
-total <- corpus_tbl |>  
-  group_by(text) |> 
+total <- corpus_w |>  
+  group_by(id) |> 
   summarise(total = n()) |> 
   arrange(-total)
 
@@ -286,8 +287,8 @@ total
 Нам осталось посчитать частотность для каждого слова и разделить на общее число слов. Таким образом мы узнаем относительную частотность (tf) для каждого слова, и сможем отобрать наиболее частотные или, наоборот, редкие слова. Обратите внимание, что таблица `corpus_counts` уже не такая длинная, как `corpus_tbl`.
 
 ```{r}
-corpus_counts <- corpus_tbl |>  
-  count(text, word) |> 
+corpus_counts <- corpus_w |>  
+  count(id, word) |> 
   arrange(-n)
 
 head(corpus_counts)
@@ -318,16 +319,15 @@ corpus_tf
 Для большинства диалогов список наиболее частотных слов будет выглядеть так:
 
 ```{r}
-library(tidytext)
 corpus_tf |> 
-  filter(text %in% c("timey", "teetet", "gorgiy")) |> 
-  group_by(text) |> 
+  filter(id %in% c("timey", "teetet", "gorgiy")) |>
+  group_by(id) |> 
   slice_max(order_by = tf, n = 10) |> 
   ungroup() |> 
-  ggplot(aes(reorder_within(word, tf, text),
-             tf, fill = text)) +
+  ggplot(aes(reorder_within(word, tf, id),
+             tf, fill = id)) +
   geom_bar(stat="identity", show.legend = FALSE) +
-  facet_wrap(~ text, scales = "free") +
+  facet_wrap(~ id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
   xlab(NULL)
@@ -368,33 +368,75 @@ length(stopwords("ru", source = "nltk"))
 Создадим переменную, с которой мы будем работать дальше:
 
 ```{r}
-stopwords_ru <- stopwords("ru", source = "stopwords-iso")
+stopwords_ru <- c(stopwords("ru", source = "stopwords-iso"), "таким", "образом", "коль", "скоро", "крайней", "мере", "совершенно", "верно", "итак", "давай", "вещи", "случае", "случаях", "словом", "либо", "которое", "ибо", "напротив", "стало", "твоему", "поскольку")
+
 ```
 
+Список стоп-слов можно пополять, как показано выше, но главное не перестараться. Например, я могу добавить туда формы существительного "часть", чтобы избавиться от оборотов вроде "по большей части" при подсчете биграм, но при этом есть риск потерять и важную информацию: проблематика части и целого важна для "Парменида". 
 
-### Удалим стоп слова
+### Удалим стоп-слова
 
 Давайте теперь удалим стопслова и посмотрим на частотные слова в диалогах:
 
 ```{r}
-  corpus_tf |> 
-  filter(text %in% c("timey", "teetet", "gorgiy")) |> 
+corpus_tf |> 
+  filter(id %in% c("timey", "teetet", "gorgiy")) |> 
   anti_join(tibble(word = stopwords_ru)) |> 
-  group_by(text) |> 
+  group_by(id) |> 
   slice_max(order_by = tf, n = 10) |> 
   ungroup() |> 
-  ggplot(aes(reorder_within(word, tf, text),
-             tf, fill = text)) +
+  ggplot(aes(reorder_within(word, tf, id),
+             tf, fill = id)) +
   geom_bar(stat="identity", show.legend = FALSE) +
-  facet_wrap(~ text, scales = "free") +
+  facet_wrap(~ id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
   xlab(NULL)
 ```
-О чем говорят вам эти диаграммы?
 
+О чем вам говорят эти диаграммы?
 
-### Анализ биграм
+### Анализ биграмм
+
+Аналогичным образом мы можем посчитать биграммы (то есть сочетания двух слов). 
+
+```{r}
+corpus_b <- corpus_tbl |> 
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) 
+
+corpus_b
+```
+
+Теперь удалим стоп-слова и посчитаем биграммы.
+
+```{r}
+count_bigrams <- corpus_b  |> 
+  separate(col = bigram, into = c("item1", "item2"), sep = " ") |> 
+  filter(!item1 %in% stopwords_ru, 
+         !item2 %in% stopwords_ru) |>
+  count(id, item1, item2, sort = T) |> 
+  unite(bigram, c("item1", "item2"), sep = " ")
+
+count_bigrams
+```
+
+Вот так выглядят наиболее частотные биграммы для тех же трех диалогов:
+
+```{r}
+count_bigrams |> 
+  filter(id %in% c("timey", "teetet", "gorgiy")) |> 
+  group_by(id) |> 
+  slice_max(order_by = n, n = 10) |> 
+  ungroup() |> 
+  ggplot(aes(reorder_within(bigram, n, id),
+             n, fill = id)) +
+  geom_bar(stat="identity", show.legend = FALSE) +
+  facet_wrap(~ id, scales = "free") +
+  coord_flip() +
+  scale_x_reordered() +
+  xlab(NULL)
+
+```
 
 ## Мера tf-idf
 
@@ -403,7 +445,7 @@ stopwords_ru <- stopwords("ru", source = "stopwords-iso")
 ```{r}
 frequency_range <- 1000
 
-corpus_tbl$word |>
+corpus_w$word |>
   str_c(collapse = " ") |> 
   tibble(text = _) |> 
   unnest_tokens(output = "bigram", input = text, token = "ngrams", n = 2) |> 
@@ -417,7 +459,7 @@ corpus_tbl$word |>
 
 # create unigram count  ---------------------------------------------------
 
-corpus_tbl |> 
+corpus_w |> 
   count(word) |> 
   mutate(total = sum(n))->
   word_count
@@ -465,7 +507,7 @@ bigram_count |>
 ```{r}
 set.seed(20240602)
 library(word2vec)
-model <- word2vec(x = corpus_tbl$word)
+model <- word2vec(x = corpus_w$word)
 embedding <- as.matrix(model)
 dim(embedding)
 predict(model, c("дружба", "казнь", "учитель"), type = "nearest", top_n = 10) |> 
