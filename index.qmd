@@ -187,7 +187,7 @@ C такими данными удобно работать, используя 
 - `summarise()` обобщает значения;
 - `arrange()` изменяет порядок следования строк.
 
-Все эти глаголы естественным образом сочетаются с функцией `group_by()`, которая позволяет выполнять любые операции “по группам”, и с оператором pipe `%>%` из пакета `magrittr`.
+Все эти глаголы естественным образом сочетаются с функцией `group_by()`, которая позволяет выполнять любые операции “по группам”, и с оператором pipe `|>`.
 
 Дальше мы попробуем использовать некоторые из этих функций.
 
@@ -632,8 +632,8 @@ set.seed(02062024)
 km_out <- kmeans(corpus_mx, centers = 6, nstart = 20)
 
 tibble(expected = expected, 
-       predicted = km_out$cluster) %>% 
-  group_by(expected) %>% 
+       predicted = km_out$cluster) |> 
+  group_by(expected) |> 
   count(predicted)
 ```
 
@@ -649,8 +649,8 @@ pca_fit <- prcomp(corpus_mx, scale = F, center = F)
 
 ```{r}
 library(broom)
-pca_fit %>%
-  augment(corpus_mx) %>% 
+pca_fit |>
+  augment(corpus_mx) |> 
   ggplot(aes(.fittedPC1, .fittedPC2, 
              color = expected, shape = as.factor(km_out$cluster))) +
   geom_point(size = 3, alpha = 0.7) +
