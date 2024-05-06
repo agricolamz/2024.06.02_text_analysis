@@ -519,8 +519,7 @@ bigram_count |>
 
 ```{r}
 url <- "https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/data/translators.csv"
-translators <- read_delim(url, delim = ";") |> 
-  mutate(translator = str_remove(translator, "\\w\\.\\w\\.")) |> 
+translators <- read_csv(url) |> 
   mutate(translator = str_remove_all(translator, " "))
 
 translators
@@ -536,14 +535,14 @@ corpus_trans <- corpus_tf |>
 corpus_trans
 ```
 
-Выберем 300 наиболее частотных слов. 
+Выберем 100 наиболее частотных слов. 
 
 ```{r}
 mfw <- corpus_counts |> 
   group_by(word) |> 
   summarise(counts = sum(n)) |> 
   arrange(-counts) |> 
-  slice_head(n = 300) |> 
+  slice_head(n = 100) |> 
   pull(word)
 
 mfw
@@ -593,6 +592,8 @@ expected <- corpus_mx$translator
 expected
 ```
 
+Все средние после стандартизации должны быть в районе нуля. 
+
 ```{r}
 corpus_mx <- corpus_mx |> 
   select(-translator) |> 
@@ -622,7 +623,7 @@ round(colMeans(corpus_mx), 1) |>  head()
 Когда центроиды двигаются, кластеры приобретают и теряют документы.
 
 
-![](https://www.tidymodels.org/learn/statistics/k-means/kmeans.gif)
+![Источник: <www.tidymodels.org>](https://www.tidymodels.org/learn/statistics/k-means/kmeans.gif)
 
 Внутрикластерный разброс в кластере k --- это сумма квадратов евклидовых расстояний между всеми парами наблюдений в этом кластере, разделенная на общее число входящих в него наблюдений.
 
@@ -647,17 +648,34 @@ tibble(expected = expected,
 pca_fit <- prcomp(corpus_mx, scale = F, center = F)
 ```
 
+Функция `augment()` из пакета `broom` соединяет исходные данные с данными модели, что позволяет нам совместить их на одной диаграмме. 
+
 ```{r}
 library(broom)
 pca_fit |>
   augment(corpus_mx) |> 
+  mutate(translator = expected) |> 
   ggplot(aes(.fittedPC1, .fittedPC2, 
-             color = expected, shape = as.factor(km_out$cluster))) +
+             color = expected,
+             shape = as.factor(km_out$cluster))) +
   geom_point(size = 3, alpha = 0.7) +
-  geom_text(aes(label = corpus_id), 
-            hjust = 1, angle = 45, nudge_x = -0.2,
-            color = "grey50", cex = 1.2) +
-  theme_minimal()
+  guides(shape=guide_legend(title="clusters")) +
+  theme_bw()
+```
+
+Взглянем на вещи иначе.
+
+```{r}
+pca_fit |>
+  augment(corpus_mx) |> 
+  mutate(translator = expected) |> 
+  ggplot(aes(.fittedPC1, .fittedPC2, 
+             color = as.factor(km_out$cluster))) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_label(aes(label = corpus_id)) +
+  guides(color=guide_legend(title="clusters")) +
+  facet_wrap( ~ translator) +
+  theme_bw()
 ```
 
 Что все это значит?
