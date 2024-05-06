@@ -128,7 +128,7 @@ div.csl-indent {
   </ul></li>
   <li><a href="#мера-tf-idf" id="toc-мера-tf-idf" class="nav-link" data-scroll-target="#мера-tf-idf"><span class="header-section-number">4</span> Мера tf-idf</a></li>
   <li><a href="#анализ-коллокаций" id="toc-анализ-коллокаций" class="nav-link" data-scroll-target="#анализ-коллокаций"><span class="header-section-number">5</span> Анализ коллокаций</a></li>
-  <li><a href="#кластеризация-авторов-на-основе-частотности-языковых-единиц" id="toc-кластеризация-авторов-на-основе-частотности-языковых-единиц" class="nav-link" data-scroll-target="#кластеризация-авторов-на-основе-частотности-языковых-единиц"><span class="header-section-number">6</span> Кластеризация авторов на основе частотности языковых единиц</a></li>
+  <li><a href="#кластеризация-на-основе-частотности-языковых-единиц" id="toc-кластеризация-на-основе-частотности-языковых-единиц" class="nav-link" data-scroll-target="#кластеризация-на-основе-частотности-языковых-единиц"><span class="header-section-number">6</span> Кластеризация на основе частотности языковых единиц</a></li>
   <li><a href="#векторизация" id="toc-векторизация" class="nav-link" data-scroll-target="#векторизация"><span class="header-section-number">7</span> Векторизация</a></li>
   <li><a href="#ссылки" id="toc-ссылки" class="nav-link" data-scroll-target="#ссылки">Ссылки</a></li>
   </ul>
@@ -157,7 +157,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Дата публикации</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">5.05.2024</p>
+      <p class="date">6.05.2024</p>
     </div>
   </div>
   
@@ -645,7 +645,7 @@ div.csl-indent {
 <div class="cell">
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>stopwords_ru <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">stopwords</span>(<span class="st">"ru"</span>, <span class="at">source =</span> <span class="st">"stopwords-iso"</span>), <span class="st">"таким"</span>, <span class="st">"образом"</span>, <span class="st">"коль"</span>, <span class="st">"скоро"</span>, <span class="st">"крайней"</span>, <span class="st">"мере"</span>, <span class="st">"совершенно"</span>, <span class="st">"верно"</span>, <span class="st">"итак"</span>, <span class="st">"давай"</span>, <span class="st">"вещи"</span>, <span class="st">"случае"</span>, <span class="st">"случаях"</span>, <span class="st">"словом"</span>, <span class="st">"либо"</span>, <span class="st">"которое"</span>, <span class="st">"ибо"</span>, <span class="st">"напротив"</span>, <span class="st">"стало"</span>, <span class="st">"твоему"</span>, <span class="st">"поскольку"</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Список стоп-слов можно пополять, как показано выше, но главное не перестараться. Например, я могу добавить туда формы существительного “часть”, чтобы избавиться от оборотов вроде “по большей части” при подсчете биграм, но при этом есть риск потерять и важную информацию: проблематика части и целого важна для “Парменида”.</p>
+<p>Список стоп-слов можно пополять, как показано выше, но главное не перестараться. Например, мы можем добавить туда формы существительного “часть”, чтобы избавиться от оборотов вроде “по большей части” при подсчете биграм, но при этом есть риск потерять и важную информацию: проблематика части и целого важна для “Парменида”.</p>
 </section>
 <section id="удалим-стоп-слова" class="level3" data-number="3.3">
 <h3 data-number="3.3" class="anchored" data-anchor-id="удалим-стоп-слова"><span class="header-section-number">3.3</span> Удалим стоп-слова</h3>
@@ -807,22 +807,44 @@ Joining with `by = join_by(word2)`</code></pre>
 </div>
 </div>
 </section>
-<section id="кластеризация-авторов-на-основе-частотности-языковых-единиц" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="кластеризация-авторов-на-основе-частотности-языковых-единиц"><span class="header-section-number">6</span> Кластеризация авторов на основе частотности языковых единиц</h2>
+<section id="кластеризация-на-основе-частотности-языковых-единиц" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="кластеризация-на-основе-частотности-языковых-единиц"><span class="header-section-number">6</span> Кластеризация на основе частотности языковых единиц</h2>
+<p>Прочитаем файл .csv со сведениями о переводчиках диалогов.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">"https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/data/translators.csv"</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>translators <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(url, <span class="at">delim =</span> <span class="st">";"</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 51 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ";"
+chr (2): id, translator
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>translators</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["id"],"name":[1],"type":["chr"],"align":["left"]},{"label":["translator"],"name":[2],"type":["chr"],"align":["left"]}],"data":[{"1":"alkiviad_i","2":"С.Я.Шейнман-Топштейн"},{"1":"alkiviad_ii","2":"С.Я.Шейнман-Топштейн"},{"1":"apologiya_sokrata","2":"М.С.Соловьев"},{"1":"evtidem","2":"С.Я.Шейнман-Топштейн"},{"1":"evtifron","2":"С.Я.Шейнман-Топштейн"},{"1":"feag","2":"С.Я.Шейнман-Топштейн"},{"1":"fedon","2":"С.П.Маркиш"},{"1":"fedr","2":"А.Н.Егунов"},{"1":"fileb","2":"H.В.Самсонов"},{"1":"gippij_bolshij","2":"А.В.Болдырев"},{"1":"gippij_menshij","2":"С.Я.Шейнман-Топштейн"},{"1":"gorgij","2":"С.П. Маркиш"},{"1":"gosudarstvo_i","2":"А.Н.Егунов"},{"1":"gosudarstvo_ii","2":"А.Н.Егунов"},{"1":"gosudarstvo_iii","2":"А.Н.Егунов"},{"1":"gosudarstvo_iv","2":"А.Н.Егунов"},{"1":"gosudarstvo_ix","2":"А.Н.Егунов"},{"1":"gosudarstvo_v","2":"А.Н.Егунов"},{"1":"gosudarstvo_vi","2":"А.Н.Егунов"},{"1":"gosudarstvo_vii","2":"А.Н.Егунов"},{"1":"gosudarstvo_viii","2":"А.Н.Егунов"},{"1":"gosudarstvo_x","2":"А.Н.Егунов"},{"1":"harmid","2":"С.Я.Шейнман-Топштейн"},{"1":"ion","2":"Я.М.Боровский"},{"1":"kratil","2":"Т.В.Васильева"},{"1":"kritij","2":"С.С.Аверинцев"},{"1":"kriton","2":"М.С.Соловьев"},{"1":"lahet","2":"С.Я.Шейнман-Топштейн"},{"1":"lisid","2":"С.Я.Шейнман-Топштейн"},{"1":"meneksen","2":"С.Я.Шейнман-Топштейн"},{"1":"menon","2":"С.А.Ошеров"},{"1":"parmenid","2":"H.И.Томасов"},{"1":"pir","2":"С.К.Апта"},{"1":"politik","2":"С.Я. Шейнман-Топштейн"},{"1":"poslezakonie","2":"А.Н.Егунов"},{"1":"protagor","2":"В.С. Соловьев"},{"1":"sofist","2":"С.А.Ананьина"},{"1":"teetet","2":"Т.В. Васильева"},{"1":"timej","2":"С.С. Аверинцев"},{"1":"zakony_i","2":"А.Н.Егунов"},{"1":"zakony_ii","2":"А.Н.Егунов"},{"1":"zakony_iii","2":"А.Н.Егунов"},{"1":"zakony_iv","2":"А.Н.Егунов"},{"1":"zakony_ix","2":"А.Н.Егунов"},{"1":"zakony_v","2":"А.Н.Егунов"},{"1":"zakony_vi","2":"А.Н.Егунов"},{"1":"zakony_vii","2":"А.Н.Егунов"},{"1":"zakony_viii","2":"А.Н.Егунов"},{"1":"zakony_x","2":"А.Н.Егунов"},{"1":"zakony_xi","2":"А.Н.Егунов"},{"1":"zakony_xii","2":"А.Н.Егунов"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
 </section>
 <section id="векторизация" class="level2" data-number="7">
 <h2 data-number="7" class="anchored" data-anchor-id="векторизация"><span class="header-section-number">7</span> Векторизация</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">20240602</span>)</span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(word2vec)</span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">word2vec</span>(<span class="at">x =</span> corpus_w<span class="sc">$</span>word)</span>
-<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>embedding <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(model)</span>
-<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(embedding)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">20240602</span>)</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(word2vec)</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">word2vec</span>(<span class="at">x =</span> corpus_w<span class="sc">$</span>word)</span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>embedding <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(model)</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(embedding)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 9725   50</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, <span class="fu">c</span>(<span class="st">"дружба"</span>, <span class="st">"казнь"</span>, <span class="st">"учитель"</span>), <span class="at">type =</span> <span class="st">"nearest"</span>, <span class="at">top_n =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, <span class="fu">c</span>(<span class="st">"дружба"</span>, <span class="st">"казнь"</span>, <span class="st">"учитель"</span>), <span class="at">type =</span> <span class="st">"nearest"</span>, <span class="at">top_n =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div data-pagedtable="false">
   <script data-pagedtable-source="" type="application/json">
@@ -833,7 +855,7 @@ Joining with `by = join_by(word2)`</code></pre>
 </div>
 <p>Получившуюся модель можно визуализировать. Для этого многомерное пространство нужно уменьшить до двух. Мы будем использовать алгоритм UMAP:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(uwot)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(uwot)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Loading required package: Matrix</code></pre>
 </div>
@@ -846,22 +868,22 @@ Attaching package: 'Matrix'</code></pre>
 
     expand, pack, unpack</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>viz <span class="ot">&lt;-</span> <span class="fu">umap</span>(embedding, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">n_threads =</span> <span class="dv">2</span>)</span>
-<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(viz)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>viz <span class="ot">&lt;-</span> <span class="fu">umap</span>(embedding, <span class="at">n_neighbors =</span> <span class="dv">15</span>, <span class="at">n_threads =</span> <span class="dv">2</span>)</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(viz)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 9725    2</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">word =</span> <span class="fu">rownames</span>(embedding), </span>
-<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">V1 =</span> viz[, <span class="dv">1</span>], </span>
-<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">V2 =</span> viz[, <span class="dv">2</span>]) <span class="sc">|&gt;</span> </span>
-<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> V1, <span class="at">y =</span> V2, <span class="at">label =</span> word)) <span class="sc">+</span> </span>
-<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">size =</span> <span class="dv">2</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">word =</span> <span class="fu">rownames</span>(embedding), </span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">V1 =</span> viz[, <span class="dv">1</span>], </span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">V2 =</span> viz[, <span class="dv">2</span>]) <span class="sc">|&gt;</span> </span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> V1, <span class="at">y =</span> V2, <span class="at">label =</span> word)) <span class="sc">+</span> </span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">size =</span> <span class="dv">2</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid figure-img" width="1440"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-33-1.png" class="img-fluid figure-img" width="1440"></p>
 </figure>
 </div>
 </div>
