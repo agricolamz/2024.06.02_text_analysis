@@ -17,6 +17,7 @@ forcats
 lubridate
 tidytext
 stopwords
+broom
 word2vec
 Matrix
 uwot
