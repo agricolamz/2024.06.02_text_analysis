@@ -569,10 +569,16 @@ corpus_mx <- corpus_trans |>
   filter(translator %in% selected_translators) |> 
   pivot_wider(names_from = word, 
               values_from = tf, 
-              values_fill = 0) |> 
+              values_fill = 0) 
+
+# названия пригодятся при интерпретации
+corpus_id <- corpus_mx$id
+
+corpus_mx <- corpus_mx |> 
   select(-id)
 
 corpus_mx
+corpus_id
 ```
 
 Результаты кластеризации зависят от способа измерения объектов. Если одни объекты имеют больший разброс значений, чем другие, то при вычислении расстояний будут преобладать элементы с более широкими диапазонами.
@@ -580,7 +586,7 @@ corpus_mx
 Распространенное преобразование называется стандартизацией по Z-оценке: из значения признака Х вычитается среднее арифметическое, а результат делится на стандартное отклонение Х.
 
 $$ X_{new} = \frac{X - Mean(X)}{StDev(X)}$$
-Сохраним имена переводчиков в отдельный вектор, а затем трансформируе данные.
+Сохраним имена переводчиков в отдельный вектор, а затем трансформируем данные.
 
 ```{r}
 expected <- corpus_mx$translator
@@ -592,7 +598,7 @@ corpus_mx <- corpus_mx |>
   select(-translator) |> 
   scale()
   
-round(colMeans(corpus_mx), 1)
+round(colMeans(corpus_mx), 1) |>  head()
 ```
 
 Можно приступать к кластеризации. 
@@ -638,15 +644,20 @@ tibble(expected = expected,
 Кластеризацию по методу k-средних можно совместить со снижением размерности; это позволит показать наши кластеры на диаграмме. 
 
 ```{r}
-library(broom)
-
 pca_fit <- prcomp(corpus_mx, scale = F, center = F)
+```
 
+```{r}
+library(broom)
 pca_fit %>%
   augment(corpus_mx) %>% 
   ggplot(aes(.fittedPC1, .fittedPC2, 
              color = expected, shape = as.factor(km_out$cluster))) +
-  geom_point(size = 3, alpha = 0.7)
+  geom_point(size = 3, alpha = 0.7) +
+  geom_text(aes(label = corpus_id), 
+            hjust = 1, angle = 45, nudge_x = -0.2,
+            color = "grey50", cex = 1.2) +
+  theme_minimal()
 ```
 
 Что все это значит?
