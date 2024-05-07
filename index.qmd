@@ -694,10 +694,16 @@ for_plot |>
 
 ## Векторизация
 
-```{r}
-set.seed(20240602)
+```{r word2vec}
+#| cache: true
+
 library(word2vec)
-model <- word2vec(x = corpus_w$word)
+
+corpus <- tibble(doc_id = list.files("data/plato_w"),
+                 text = map_chr(list.files("data/plato_w", full.names = TRUE), read_lines)) |> 
+          mutate(text = tolower(text))
+
+model <- word2vec(x = corpus$text)
 embedding <- as.matrix(model)
 dim(embedding)
 predict(model, c("дружба", "казнь", "учитель"), type = "nearest", top_n = 10) |> 
@@ -710,7 +716,8 @@ predict(model, c("дружба", "казнь", "учитель"), type = "neares
 #| cache: true
 
 library(uwot)
-viz <- umap(embedding, n_neighbors = 15, n_threads = 2)
+viz <- umap(embedding,  n_neighbors = 15, n_threads = 2)
+
 dim(viz)
 ```
 
@@ -723,7 +730,17 @@ tibble(word = rownames(embedding),
        V1 = viz[, 1], 
        V2 = viz[, 2]) |> 
   ggplot(aes(x = V1, y = V2, label = word)) + 
-  geom_text(size = 2)
+  geom_text(size = 2, alpha = 0.4)
 ```
+
+```{r}
+tibble(word = rownames(embedding), 
+       V1 = viz[, 1], 
+       V2 = viz[, 2]) |>
+  filter(V2 > 5) |> 
+  ggplot(aes(x = V1, y = V2, label = word)) + 
+  geom_text(size = 2, alpha = 0.4)
+```
+
 
 ## Ссылки {.unnumbered}

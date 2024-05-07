@@ -11,7 +11,7 @@ lubridate
 tidytext
 stopwords
 broom
+ggrepel
 word2vec
 Matrix
 uwot
-ggrepel
