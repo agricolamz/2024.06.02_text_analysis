@@ -10,8 +10,7 @@ forcats
 lubridate
 tidytext
 stopwords
-broom
-ggrepel
+dendextend
 word2vec
 Matrix
 uwot

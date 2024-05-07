@@ -180,7 +180,7 @@ head(ion, 20)
 
 ![](https://d33wubrfki0l68.cloudfront.net/6f1ddb544fc5c69a2478e444ab8112fb0eea23f8/91adc/images/tidy-1.png)
 
-C такими данными удобно работать, используя “грамматику трансформаци данных”, лежащую в основе `dplyr` и других пакетов семейства `tidyverse`.  Эта грамматика предоставляет последовательный набор глаголов, которые помогают решать наиболее распространенные задачи манипулирования данными:
+C такими данными удобно работать, используя “грамматику трансформаци данных”, лежащую в основе диалекта `tidyverse`.  Эта грамматика предоставляет последовательный набор глаголов, которые помогают решать наиболее распространенные задачи манипулирования данными:
 
 - `mutate()` добавляет новые или меняет старые переменные, которые являются функциями существующих переменных;
 - `select()` выбирает переменные на основе их имен;
@@ -189,8 +189,6 @@ C такими данными удобно работать, используя 
 - `arrange()` изменяет порядок следования строк.
 
 Все эти глаголы естественным образом сочетаются с функцией `group_by()`, которая позволяет выполнять любые операции “по группам”, и с оператором pipe `|>`.
-
-Дальше мы попробуем использовать некоторые из этих функций.
 
 ### Загружаем наш корпус
 
@@ -214,127 +212,48 @@ getwd()
 Лемматизация --- автоматическое приведение слов к начальной форме (лемме). Здесь мы не будем рассказывать, как это делалось, но для интересующихся добавили [скрипт](https://github.com/agricolamz/2024.06.02_text_analysis/blob/main/helping_scripts/lemmatise.R) в репозиторий проекта. Можете попробовать запустить код самостоятельно. Для лемматизации использовалась модель [SynTagRus](https://universaldependencies.org/treebanks/ru_syntagrus/index.html). 
 :::
 
-
-Для начала узнаем, какие файлы лежат в папке `plato_w`:
-
 ```{r}
-filenames <- list.files("./data/plato_w", full.names = TRUE) 
-head(filenames) 
-length(filenames)
+library(tidytext)
+corpus <- list.files("data/plato_w", full.names = TRUE) |> 
+  map_chr(read_lines) |> 
+  tibble(doc_id = list.files("data/plato_w"),
+         text = _,) |> 
+  mutate(text = tolower(text),
+         doc_id = str_remove(doc_id, "\\.txt"),
+         doc_id = str_replace_all(doc_id, "_", " ")) 
 ```
 
-Объект `filenames` --- это символьный вектор, в котором 51 элемент. В нем хранятся пути до файлов с диалогами. Функция `head()` выводит только первые шесть элементов
-
-Теперь наша задача --- прочитать их все в R, чтобы можно было посчитать частотности. Для этого нужен цикл, который продется по всем файлам и соберет оттуда текст. 
+Прочитаем файл .csv со сведениями о переводчиках диалогов. 
 
 ```{r}
-corpus <- map(filenames, read_lines)
+url <- "https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/translators.csv"
+translators <- read_csv(url) 
+
+corpus <- corpus |> 
+  left_join(translators)
 ```
-
-Теперь у вас в окружении появился список `corpus`, в котором 51 элемент, по числу файлов. Достать любой элемент из списка и посмотреть на него можно по индексу. Текст большой, поэтому снова выведем только начало.
-
-```{r}
-corpus[[1]]
-```
-
-Каждому элементу списка можно присвоить имя:
-
-```{r}
-cnames <- list.files("./data/plato_w", full.names = FALSE) |> 
-  str_remove("\\.txt")
-
-names(corpus) <- cnames
-```
-
-Нажмите на объект в окружении, чтобы понять, что изменилось.
 
 ## Анализ частотности
 
 ### Униграммы
 
-Прежде всего превратим объект `corpus` из списка в таблицу (tibble), чтобы можно было работать с использованием `tidyverse`.
-
 ```{r}
-corpus_tbl <- corpus  |> 
-  stack() |> 
-  as_tibble() |>  
-  transmute(id = ind, text = values)
-
-head(corpus_tbl)
-nrow(corpus_tbl)
+corpus |> 
+  unnest_tokens(input = "text", output = "word", token = "words") |> 
+  filter(str_detect(doc_id, "(timey)|(teetet)|(gorgiy)")) |> 
+  count(doc_id, word) |> 
+  group_by(doc_id) |> 
+  slice_max(n = 10, order_by = n) |> 
+  mutate(word = reorder_within(word, n, within = doc_id)) |> 
+  ggplot(aes(n, word, fill = doc_id))+
+  geom_col()+
+  facet_wrap(~doc_id, scales = "free")+
+  scale_y_reordered()+
+  labs(x = NULL, y = NULL)
 ```
 
-У нас получилась таблица, в которой хранятся тексты диалогов. Разобьем каждый текст на слова. Теперь наши данные хранятся в опрятном виде.
 
-```{r}
-library(tidytext)
-corpus_w <- corpus_tbl |> 
-  unnest_tokens(word, text) 
-
-corpus_w
-```
-
-Узнаем, сколько слов в каждом тексте:
-
-```{r}
-total <- corpus_w |>  
-  group_by(id) |> 
-  summarise(total = n()) |> 
-  arrange(-total)
-
-total
-```
-
-Нам осталось посчитать частотность для каждого слова и разделить на общее число слов. Таким образом мы узнаем относительную частотность (tf) для каждого слова, и сможем отобрать наиболее частотные или, наоборот, редкие слова. Обратите внимание, что таблица `corpus_counts` уже не такая длинная, как `corpus_tbl`.
-
-```{r}
-corpus_counts <- corpus_w |>  
-  count(id, word) |> 
-  arrange(-n)
-
-head(corpus_counts)
-nrow(corpus_counts)
-```
-
-Ожидаемо среди самых частотных единиц оказались служебные части речи. 
-
-Соединим две таблицы.
-
-```{r}
-corpus_tf <- corpus_counts |> 
-  left_join(total)
-
-corpus_tf
-```
-
-Теперь добавим новый столбец:
-
-```{r}
-corpus_tf <- corpus_tf |> 
-  mutate(tf = n / total) |> 
-  arrange(-tf)
-
-corpus_tf
-```
-
-Для большинства диалогов список наиболее частотных слов будет выглядеть так:
-
-```{r}
-corpus_tf |> 
-  filter(id %in% c("timey", "teetet", "gorgiy")) |>
-  group_by(id) |> 
-  slice_max(order_by = tf, n = 10) |> 
-  ungroup() |> 
-  ggplot(aes(reorder_within(word, tf, id),
-             tf, fill = id)) +
-  geom_bar(stat="identity", show.legend = FALSE) +
-  facet_wrap(~ id, scales = "free") +
-  coord_flip() +
-  scale_x_reordered() +
-  xlab(NULL)
-```
-
-В некоторых случаях (например, для кластеризации), такие служебные слова нужны, потому что они относительно независимы от тематики. В других случаях (например, для тематического моделирования) от них лучше избавиться. Это можно сделать двумя способами: либо механически удалить стоп-слова, либо отобрать лексику на основе tf_idf.
+Ожидаемо среди самых частотных оказались служебные части речи. В некоторых случаях (например, для кластеризации), это полезно, потому что они относительно независимы от тематики. В других от них лучше избавиться. Это можно сделать двумя способами: либо механически удалить стоп-слова, либо отобрать лексику на основе tf_idf.
 
 ### Стопслова и пакет `stopwords`
 
@@ -375,181 +294,81 @@ stopwords_ru <- c(stopwords("ru", source = "stopwords-iso"), "таким", "об
 
 Список стоп-слов можно пополять, как показано выше, но главное не перестараться. Например, мы можем добавить туда формы существительного "часть", чтобы избавиться от оборотов вроде "по большей части" при подсчете биграм, но при этом есть риск потерять и важную информацию: проблематика части и целого важна для "Парменида". 
 
+```{r}
+idx <- which(stopwords_ru == "душа" | stopwords_ru == "жизнь")
+
+stopwords_ru <- stopwords_ru[-idx]
+```
+
 ### Удалим стоп-слова
 
 Давайте теперь удалим стопслова и посмотрим на частотные слова в диалогах:
 
 ```{r}
-corpus_tf |> 
-  filter(id %in% c("timey", "teetet", "gorgiy")) |> 
+corpus |> 
+  unnest_tokens(input = "text", output = "word", token = "words") |>
+  filter(str_detect(doc_id, "(timey)|(teetet)|(gorgiy)")) |> 
   anti_join(tibble(word = stopwords_ru)) |> 
-  group_by(id) |> 
-  slice_max(order_by = tf, n = 10) |> 
+  count(doc_id, word) |> 
+  group_by(doc_id) |>
+  slice_max(order_by = n, n = 10) |> 
   ungroup() |> 
-  ggplot(aes(reorder_within(word, tf, id),
-             tf, fill = id)) +
-  geom_bar(stat="identity", show.legend = FALSE) +
-  facet_wrap(~ id, scales = "free") +
+  ggplot(aes(reorder_within(word, n, doc_id),
+             n, fill = doc_id)) +
+  geom_bar(stat="identity") +
+  facet_wrap(~ doc_id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
   xlab(NULL)
 ```
 
-О чем вам говорят эти диаграммы?
 
 ### Анализ биграмм
 
 Аналогичным образом мы можем посчитать биграммы (то есть сочетания двух слов). 
 
 ```{r}
-corpus_b <- corpus_tbl |> 
-  unnest_tokens(bigram, text, token = "ngrams", n = 2) 
-
-corpus_b
-```
-
-Теперь удалим стоп-слова и посчитаем биграммы.
-
-```{r}
-count_bigrams <- corpus_b  |> 
+corpus |> 
+  unnest_tokens(input = "text", output = "bigram", token = "ngrams", n = 2) |>
+  filter(str_detect(doc_id, "(timey)|(teetet)|(gorgiy)")) |> 
   separate(col = bigram, into = c("item1", "item2"), sep = " ") |> 
   filter(!item1 %in% stopwords_ru, 
          !item2 %in% stopwords_ru) |>
-  count(id, item1, item2, sort = T) |> 
-  unite(bigram, c("item1", "item2"), sep = " ")
-
-count_bigrams
-```
-
-Вот так выглядят наиболее частотные биграммы для тех же трех диалогов:
-
-```{r}
-count_bigrams |> 
-  filter(id %in% c("timey", "teetet", "gorgiy")) |> 
-  group_by(id) |> 
+  unite(bigram, c("item1", "item2"), sep = " ") |> 
+  count(doc_id, bigram) |> 
+  group_by(doc_id) |>
   slice_max(order_by = n, n = 10) |> 
   ungroup() |> 
-  ggplot(aes(reorder_within(bigram, n, id),
-             n, fill = id)) +
-  geom_bar(stat="identity", show.legend = FALSE) +
-  facet_wrap(~ id, scales = "free") +
+  ggplot(aes(reorder_within(bigram, n, doc_id),
+             n, fill = doc_id)) +
+  geom_bar(stat="identity") +
+  facet_wrap(~ doc_id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
   xlab(NULL)
-
 ```
 
 ## Мера tf-idf
 
-## Анализ коллокаций
-
-```{r}
-frequency_range <- 1000
-
-corpus_w$word |>
-  str_c(collapse = " ") |> 
-  tibble(text = _) |> 
-  unnest_tokens(output = "bigram", input = text, token = "ngrams", n = 2) |> 
-  na.omit() |> 
-  separate(bigram, into = c("word1", "word2"), sep = " ") |> 
-  anti_join(tibble(word1 = stopwords_ru)) |> 
-  anti_join(tibble(word2 = stopwords_ru)) |>
-  count(word1, word2) |> 
-  slice_max(n = frequency_range, n) ->
-  bigram_count
-
-# create unigram count  ---------------------------------------------------
-
-corpus_w |> 
-  count(word) |> 
-  mutate(total = sum(n))->
-  word_count
-
-# merge them all and calculate measures -----------------------------------
-
-bigram_count |> 
-  rename(O11 = n) |> 
-  left_join(word_count |> select(-total), by = c("word1" = "word")) |> 
-  rename(O12 = n) |> 
-  left_join(word_count, by = c("word2" = "word")) |> 
-  rename(O21 = n) |> 
-  mutate(O21 = as.double(O21),
-         O12 = as.double(O12),
-         O11 = as.double(O11),
-         O21 = O21 - O11,
-         O12 = O12 - O11,
-         O22 = total - O12 - O21 - O11,
-         R1 = O11 + O12, 
-         R2 = O21 + O22,
-         C1 = O11 + O21, 
-         C2 = O12 + O22,
-         N = O11 + O12 + O21 + O22,
-         E11 = R1 * C1 / N, 
-         E12 = R1 * C2 / N,
-         E21 = R2 * C1 / N, 
-         E22 = R2 * C2 / N,
-         MI = log2(O11 / E11),
-         t.score = (O11 - E11) / sqrt(O11),
-         X2 = (O11-E11)^2/E11 + (O12-E12)^2/E12 + (O21-E21)^2/E21 + (O22-E22)^2/E22,
-         DP = O11 / R1 - O21 / R2) |> 
-  arrange(desc(t.score)) |> 
-  select(word1, word2, O11, O21, O12, N, MI, t.score, X2, DP) |> 
-  rename(total = N,
-         co_occurrence_frequency = O11,
-         w1_frequency = O12,
-         w2_frequency = O21)
-```
-
 
 ## Кластеризация на основе частотности языковых единиц
 
-### Способы кластеризации
-Все методы машинного обучения делятся на методы **обучения с учителем** и методы обучения без учителя. В первом случае у нас есть некоторое количество признаков X, измеренных у n объектов, и некоторый отклик Y. Задача заключается в предсказании Y по X. Например, мы измерили вес и пушистость у сотни котов известных пород, и хотим предсказать породу других котов, зная их вес и пушистость.
-
-**Обучение без учителя** предназначено для случаев, когда у нас есть только некоторый набор признаков X, но нет значения отклика. Например, есть группа котов, для которых мы измерили вес и пушистость, но мы не знаем, на какие породы они делятся. 
-
-**Кластеризация** относится к числу методов для обнаружения неизвестных групп (кластеров) в данных. Точнее, это целый набор методов. Мы рассмотрим два из них: 
-- кластеризация по методу K средних
-- иерархическая кластеризация
-
-В случае с кластеризацией по методу K средних мы пытаемся разбить наблюдения на некоторое заранее заданное число кластеров. Иерархическая кластеризация возвращает результат в виде дерева (**дендрограммы**), которая позволяет увидеть все возможные кластеры.
-
 ### Подготовка данных
 
-Сначала прочитаем файл .csv со сведениями о переводчиках диалогов. 
+Кластеризация относится к числу методов обучения без учителя для обнаружения неизвестных групп (кластеров) в данных. Точнее, это целый набор методов. Из них **иерархическая кластеризация** возвращает результат в виде дерева (дендрограммы), которая позволяет увидеть все возможные кластеры. Иерархическая кластеризация проводится обычно на основе самой частотной лексики.
+
 
 ```{r}
-url <- "https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/data/translators.csv"
-translators <- read_csv(url) |> 
-  mutate(translator = str_remove_all(translator, " "))
-
-translators
-```
-
-Теперь соединим эту таблицу с объектом `corpus_tf`, где хранится относительная частотность для токенов (до удаления стоп-слов). 
-
-```{r}
-corpus_trans <- corpus_tf |> 
-  select(-n, -total) |> 
-  left_join(translators)
-
-corpus_trans
-```
-
-Выберем 100 наиболее частотных слов. 
-
-```{r}
-mfw <- corpus_counts |> 
-  group_by(word) |> 
-  summarise(counts = sum(n)) |> 
-  arrange(-counts) |> 
-  slice_head(n = 100) |> 
-  pull(word)
+mfw <- corpus |> 
+  unnest_tokens(input = "text", output = "word", token = "words") |>
+  count(word) |> 
+  slice_max(order_by = n, n = 100) |> 
+  pull(word) 
 
 mfw
 ```
 
-Удалим переводчиков, у которых только один текст в корпусе.
+Выберем переводчиков, у которых больше одного текста в корпусе.
 
 ```{r}
 selected_translators <- translators |> 
@@ -564,21 +383,26 @@ selected_translators
 Теперь подготовим матрицу с частотностями. 
 
 ```{r}
-corpus_mx <- corpus_trans |> 
-  filter(word %in% mfw) |> 
+corpus_mx <- corpus |> 
   filter(translator %in% selected_translators) |> 
+  unnest_tokens(input = "text", output = "word", token = "words") |>
+  count(doc_id, translator, word) |>
+  group_by(doc_id) |> 
+  mutate(total = sum(n)) |>
+  ungroup() |> 
+  mutate(tf = n / total) |>
+  select(-n, -total) |> 
+  filter(word %in% mfw) |> 
   pivot_wider(names_from = word, 
               values_from = tf, 
               values_fill = 0) 
 
 # названия пригодятся при интерпретации
-corpus_id <- corpus_mx$id
+doc_id <- corpus_mx$doc_id
+expected <- corpus_mx$translator
 
 corpus_mx <- corpus_mx |> 
-  select(-id)
-
-corpus_mx
-corpus_id
+  select(-doc_id, -translator)
 ```
 
 Результаты кластеризации зависят от способа измерения объектов. Если одни объекты имеют больший разброс значений, чем другие, то при вычислении расстояний будут преобладать элементы с более широкими диапазонами.
@@ -586,140 +410,28 @@ corpus_id
 Распространенное преобразование называется стандартизацией по Z-оценке: из значения признака Х вычитается среднее арифметическое, а результат делится на стандартное отклонение Х.
 
 $$ X_{new} = \frac{X - Mean(X)}{StDev(X)}$$
-Сохраним имена переводчиков в отдельный вектор, а затем трансформируем данные.
-
-```{r}
-expected <- corpus_mx$translator
-expected
-```
 
 Все средние после стандартизации должны быть в районе нуля. 
 
 ```{r}
 corpus_mx <- corpus_mx |> 
-  select(-translator) |> 
   scale()
   
 round(colMeans(corpus_mx), 1) |>  head()
 ```
 
-Можно приступать к кластеризации. 
-
-### Кластеризация по методу K средних 
-
-Алгоритм кластеризации:
-
-1. Каждому наблюдению присваивается случайно выбранное число из интервала от 1 до K (число кластеров). Это исходные метки
-
-![](https://delladata.fr/wp-content/uploads/2020/05/algo_kmeans.jpg.webp)
-
-2. Вычисляется _центроид_ для каждого из кластеров. Центроид k-го класса --- вектор из p средних значений признаков, описывающих наблюдения из этого кластера;
-
-3. Каждому наблюдению присваивается метка того кластера, чей центроид находится ближе всего к этому наблюдению (удаленность выражается обычно в виде евклидова расстояния)
-
-4. Шаги 2-3 повторяются до тех пор, пока метки классов не станут изменяться. 
-
-Это дает возможность минимизировать **внутрикластерный разброс**: хорошей считается такая кластеризация, при которой такой разброс минимален. 
-
-Когда центроиды двигаются, кластеры приобретают и теряют документы.
-
-
-![Источник: [www.tidymodels.org](https://www.tidymodels.org/learn/statistics/k-means/kmeans.gif)](https://www.tidymodels.org/learn/statistics/k-means/kmeans.gif)
-
-
-```{r}
-set.seed(02062024)
-# установим число центров по числу переводчиков
-km_out <- kmeans(corpus_mx, centers = 6, nstart = 20)
-
-tibble(expected = expected, 
-       predicted = km_out$cluster) |> 
-  group_by(expected) |> 
-  count(predicted)
-```
-
-Как это понимать?
-
-### Визуализация кластеров
-
-Кластеризацию по методу k-средних можно совместить со снижением размерности; это позволит показать наши кластеры на диаграмме. 
-
-```{r}
-pca_fit <- prcomp(corpus_mx, scale = F, center = F)
-```
-
-Функция `augment()` из пакета `broom` соединяет исходные данные с данными модели, что позволяет нам совместить их на одной диаграмме. 
-
-```{r}
-library(broom)
-pca_fit |>
-  augment(corpus_mx) |> 
-  mutate(translator = expected) |> 
-  ggplot(aes(.fittedPC1, .fittedPC2, 
-             color = expected,
-             shape = as.factor(km_out$cluster))) +
-  geom_point(size = 3, alpha = 0.7) +
-  guides(shape=guide_legend(title="clusters"))
-```
-
-Взглянем на вещи иначе.
-
-```{r}
-#| fig-width: 9
-#| fig-height: 7
-
-for_plot <- pca_fit |>
-  augment(corpus_mx) |> 
-  mutate(translator = expected)
-
-library(ggrepel)
-
-for_plot |> 
-  ggplot(aes(.fittedPC1, .fittedPC2, color = as.factor(km_out$cluster))) +
-  geom_point(size = 1, color = "grey80", 
-             data = for_plot |>  select(-translator)) +
-  geom_point(size = 1) +
-  geom_text_repel(aes(label = corpus_id), max.overlaps = 100)+
-  guides(color=guide_legend(title="clusters")) +
-  facet_wrap( ~ translator) +
-  theme(legend.position = "bottom")
-```
-
-Что все это значит?
 
 ### Иерархическая кластеризация
-
-Одним из недостатков кластеризации по методу K средних является то, что она требует предварительно указать число кластеров. Этого недостатка лишена иерархическая кластеризация. Если такая кластеризация происходит "снизу вверх", она называется **агломеративной**. При этом построение дендрограммы начинается с "листьев" и продолжается вплоть до самого "ствола".
-
-![](images/clusters1.png) 
-
-При интерпретации дерева надо иметь в виду, что существует $2^{n-1}$ способов упорядочения ветвей дендрограммы, где n -- это число листьев. В каждой из точек слияния можно поменять местами наблюдения, не изменяя смысла дендрограммы. Поэтому выводы  о сходстве двух наблюдений нельзя делать на основе из близости по горизонтальной оси. См. Рис. 10.10 из книги "Введение в статистическое обучение", с. 423). На рисунке видно, что наблюдение 9 похоже на наблюдение 2 не больше, чем оно похоже на наблюдения 8, 5 и 7. Вместо этого выводы делаются, исходя из положения на вертикальной оси той точки, где происходит слияние наблюдений. 
-
-Количество кластеров определеяется высотой, на которой мы разрезаем дендрограмму. 
-![](https://i.stack.imgur.com/tnbb9.jpg)
-
-Из этого следует, что одну и ту же дендрограмму можно использовать для получения разного числа кластеров.
-
-### Алгоритм иерархической кластеризации
 
 1. Вычислить меру различия для всех пар наблюдений. На первом шаге все наблюдения рассматриваются как отдельный кластер. 
 
 2. Найти пару наиболее похожих кластеров и объединить их. Различие между кластерами соответствует высоте, на которой происходит их слияние в дендрограмме. 
+
 3. Повторить шаги 1-2, пока не останется 1 кластер.
 
 ![](images/clusters2.png)
 
-Вид дерева будет зависеть от того, какой тип присоединения вы выберете. На рисунке ниже представлено три способа: полное, одиночное, среднее. 
-
-![](https://www.researchgate.net/publication/329208978/figure/fig5/AS:755481513562120@1557132237914/Different-linkage-methods-for-hierarchical-clustering.png)
-
-Обычно предпочитают среднее и полное, т.к. они приводят к более сбалансированным дендрограммам. 
-
-![](https://slideplayer.com/slide/12781562/77/images/7/The+Elements+of+Statistical+Learning+%282nd+edition%29+Hastie%2C+Tibshirani+and+Friedman..jpg)
-
-Для функции `hclust()` в R по умолчанию выставлено значение аргумента `method = "complete"`.
-
-### Иерархическая кластеризация в R
+Вид дерева будет зависеть от того, какой тип присоединения вы выберете. Обычно предпочитают среднее и полное, т.к. они приводят к более сбалансированным дендрограммам. Для функции `hclust()` в R по умолчанию выставлено значение аргумента `method = "complete"`.
 
 Применим алгоритм к данным о переводчиках Платона. Функция `dist()` по умолчанию считает евклидово расстояние. 
 
@@ -778,13 +490,40 @@ abline(v=0.8, col="pink4",lty=2)
 
 library(word2vec)
 
-corpus <- tibble(doc_id = list.files("data/plato_w"),
-                 text = map_chr(list.files("data/plato_w", full.names = TRUE), read_lines)) |> 
+corpus <- tibble(doc_id = list.files("data/plato_l"),
+                 text = map_chr(list.files("data/plato_l", full.names = TRUE), read_lines)) |> 
           mutate(text = tolower(text))
 
-model <- word2vec(x = corpus$text)
-embedding <- as.matrix(model)
-dim(embedding)
+set.seed(02062024)
+model <- word2vec(x = corpus$text, 
+                  type = "skip-gram",
+                  dim = 50,
+                  window = 5,
+                  iter = 5,
+                  hs = TRUE,
+                  min_count = 5,
+                  stopwords = stopwords_ru,
+                  threads = 6)
+
+```
+
+Наша модель содержит эмбеддинги для слов; посмотрим на матрицу.
+
+```{r}
+emb <- as.matrix(model)
+dim(emb)
+```
+
+Создатели алгоритма [утверждают](http://arxiv.org/pdf/1310.4546), что эмбеддинги можно осмысленно складывать и вычитать. Проверим. 
+
+```{r}
+vector <- emb["душа", ] - emb["тело", ] + emb["мудрость", ]
+predict(model, vector, type = "nearest", top_n = 10)
+```
+
+Кажется, это не совсем лишено смысла. 
+
+```{r}
 predict(model, c("дружба", "казнь", "учитель"), type = "nearest", top_n = 10) |> 
   bind_rows()
 ```
@@ -795,7 +534,7 @@ predict(model, c("дружба", "казнь", "учитель"), type = "neares
 #| cache: true
 
 library(uwot)
-viz <- umap(embedding,  n_neighbors = 15, n_threads = 2)
+viz <- umap(emb,  n_neighbors = 15, n_threads = 2)
 
 dim(viz)
 ```
@@ -805,7 +544,7 @@ dim(viz)
 #| fig-width: 15
 #| fig-height: 15
 
-tibble(word = rownames(embedding), 
+tibble(word = rownames(emb), 
        V1 = viz[, 1], 
        V2 = viz[, 2]) |> 
   ggplot(aes(x = V1, y = V2, label = word)) + 
@@ -813,10 +552,10 @@ tibble(word = rownames(embedding),
 ```
 
 ```{r}
-tibble(word = rownames(embedding), 
+tibble(word = rownames(emb), 
        V1 = viz[, 1], 
        V2 = viz[, 2]) |>
-  filter(V2 > 5) |> 
+  filter(V2 > 2.5) |> 
   ggplot(aes(x = V1, y = V2, label = word)) + 
   geom_text(size = 2, alpha = 0.4)
 ```
