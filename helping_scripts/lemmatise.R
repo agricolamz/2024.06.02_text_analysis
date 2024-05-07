@@ -20,14 +20,17 @@ corpus_ann_tbl <- map(corpus_ann, as_tibble)
 # select lemmas
 get_lemma <- function(tbl) {
   tbl |> 
-    select(doc_id, lemma)
+    select(doc_id, lemma) |> 
+    mutate(text = str_c(lemma, collapse = " ")) |> 
+    select(-lemma) |> 
+    distinct(doc_id, text)
 }
 
 corpus_lemma <- map(corpus_ann_tbl, get_lemma)
 
 # save lemmas
 write_lemma <- function(tbl){
-  l <- tbl$lemma
+  l <- tbl$text
   name <- paste0("./data/plato_l/", unique(tbl$doc_id))
   writeLines(l, con = name)
 }
