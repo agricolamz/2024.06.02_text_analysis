@@ -67,5 +67,5 @@ filenames <- list.files("data/texts_raw") |>
 
 translators <- tibble(doc_id = str_replace(filenames, "_", " "), 
                       translator = trans)
-write_csv2(translators, "translators.csv")
+write_delim(translators, "translators.csv", delim = ",")
 
