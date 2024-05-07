@@ -706,6 +706,9 @@ chr (2): doc_id, translator
 <span id="cb56-19"><a href="#cb56-19" aria-hidden="true" tabindex="-1"></a>corpus_mx <span class="ot">&lt;-</span> corpus_mx <span class="sc">|&gt;</span> </span>
 <span id="cb56-20"><a href="#cb56-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>doc_id, <span class="sc">-</span>translator)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="иерархическая-кластеризация" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="иерархическая-кластеризация"><span class="header-section-number">5.2</span> Иерархическая кластеризация</h3>
 <p>Результаты кластеризации зависят от способа измерения объектов. Если одни объекты имеют больший разброс значений, чем другие, то при вычислении расстояний будут преобладать элементы с более широкими диапазонами.</p>
 <p>Распространенное преобразование называется стандартизацией по Z-оценке: из значения признака Х вычитается среднее арифметическое, а результат делится на стандартное отклонение Х.</p>
 <p><span class="math display">\[ X_{new} = \frac{X - Mean(X)}{StDev(X)}\]</span></p>
@@ -720,15 +723,6 @@ chr (2): doc_id, translator
     0     0     0     0     0     0 </code></pre>
 </div>
 </div>
-</section>
-<section id="иерархическая-кластеризация" class="level3" data-number="5.2">
-<h3 data-number="5.2" class="anchored" data-anchor-id="иерархическая-кластеризация"><span class="header-section-number">5.2</span> Иерархическая кластеризация</h3>
-<ol type="1">
-<li><p>Вычислить меру различия для всех пар наблюдений. На первом шаге все наблюдения рассматриваются как отдельный кластер.</p></li>
-<li><p>Найти пару наиболее похожих кластеров и объединить их. Различие между кластерами соответствует высоте, на которой происходит их слияние в дендрограмме.</p></li>
-<li><p>Повторить шаги 1-2, пока не останется 1 кластер.</p></li>
-</ol>
-<p><img src="images/clusters2.png" class="img-fluid"></p>
 <p>Вид дерева будет зависеть от того, какой тип присоединения вы выберете. Обычно предпочитают среднее и полное, т.к. они приводят к более сбалансированным дендрограммам. Для функции <code>hclust()</code> в R по умолчанию выставлено значение аргумента <code>method = "complete"</code>.</p>
 <p>Применим алгоритм к данным о переводчиках Платона. Функция <code>dist()</code> по умолчанию считает евклидово расстояние.</p>
 <div class="cell">
@@ -768,52 +762,24 @@ chr (2): doc_id, translator
 </div>
 <p>Для получения меток кластеров, возникающих в результате рассечения дендрограммы на той или иной высоте, можно воспользоваться функцией <code>cutree()</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cutree</span>(hc, <span class="dv">5</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cutree</span>(hc, <span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>С.Я.Шейнман-Топштейн С.Я.Шейнман-Топштейн         М.С.Соловьев 
                    1                    1                    1 
 С.Я.Шейнман-Топштейн С.Я.Шейнман-Топштейн С.Я.Шейнман-Топштейн 
-                   1                    1                    1 
-          С.П.Маркиш           А.Н.Егунов С.Я.Шейнман-Топштейн 
-                   1                    2                    1 
-          С.П.Маркиш           А.Н.Егунов           А.Н.Егунов 
-                   1                    1                    3 
-          А.Н.Егунов           А.Н.Егунов           А.Н.Егунов 
-                   3                    3                    3 
-          А.Н.Егунов           А.Н.Егунов           А.Н.Егунов 
-                   3                    3                    3 
-          А.Н.Егунов           А.Н.Егунов С.Я.Шейнман-Топштейн 
-                   3                    2                    1 
-       Т.В.Васильева        С.С.Аверинцев         М.С.Соловьев 
-                   1                    2                    1 
-С.Я.Шейнман-Топштейн С.Я.Шейнман-Топштейн С.Я.Шейнман-Топштейн 
-                   1                    1                    2 
-С.Я.Шейнман-Топштейн           А.Н.Егунов        Т.В.Васильева 
-                   4                    5                    1 
-       С.С.Аверинцев           А.Н.Егунов           А.Н.Егунов 
-                   2                    4                    4 
-          А.Н.Егунов           А.Н.Егунов           А.Н.Егунов 
-                   4                    5                    5 
-          А.Н.Егунов           А.Н.Егунов           А.Н.Егунов 
-                   5                    5                    5 
-          А.Н.Егунов           А.Н.Егунов           А.Н.Егунов 
-                   5                    4                    5 
-          А.Н.Егунов 
-                   5 </code></pre>
+                   1                    1                    1 </code></pre>
 </div>
 </div>
 <p>Этим меткам можно назначить свой цвет.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># |fig-height: 9</span></span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dendextend)</span>
-<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>hcd <span class="ot">&lt;-</span> <span class="fu">as.dendrogram</span>(hc)</span>
-<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">7</span>))</span>
-<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>hcd <span class="sc">%&gt;%</span> </span>
-<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set</span>(<span class="st">"branches_k_color"</span>, <span class="at">k =</span> <span class="dv">6</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set</span>(<span class="st">"labels_col"</span>, <span class="at">k=</span><span class="dv">6</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">horiz =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="fl">0.8</span>, <span class="at">col=</span><span class="st">"pink4"</span>,<span class="at">lty=</span><span class="dv">2</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dendextend)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>hcd <span class="ot">&lt;-</span> <span class="fu">as.dendrogram</span>(hc)</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">7</span>))</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>hcd <span class="sc">%&gt;%</span> </span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set</span>(<span class="st">"branches_k_color"</span>, <span class="at">k =</span> <span class="dv">6</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set</span>(<span class="st">"labels_col"</span>, <span class="at">k=</span><span class="dv">6</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">horiz =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="fl">0.8</span>, <span class="at">col=</span><span class="st">"pink4"</span>,<span class="at">lty=</span><span class="dv">2</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -827,6 +793,7 @@ chr (2): doc_id, translator
 </section>
 <section id="векторизация" class="level2" data-number="6">
 <h2 data-number="6" class="anchored" data-anchor-id="векторизация"><span class="header-section-number">6</span> Векторизация</h2>
+<p>Word2vec – это полносвязаная нейросеть с двумя скрытыми слоями. Такое обучение называется не глубоким, а поверхностным (shallow).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(word2vec)</span>
 <span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -834,33 +801,34 @@ chr (2): doc_id, translator
 <span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">text =</span> <span class="fu">map_chr</span>(<span class="fu">list.files</span>(<span class="st">"data/plato_l"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>), read_lines)) <span class="sc">|&gt;</span> </span>
 <span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">mutate</span>(<span class="at">text =</span> <span class="fu">tolower</span>(text))</span>
 <span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">02062024</span>)</span>
-<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">word2vec</span>(<span class="at">x =</span> corpus<span class="sc">$</span>text, </span>
-<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>                  <span class="at">type =</span> <span class="st">"skip-gram"</span>,</span>
-<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>                  <span class="at">dim =</span> <span class="dv">50</span>,</span>
-<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>                  <span class="at">window =</span> <span class="dv">5</span>,</span>
-<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>                  <span class="at">iter =</span> <span class="dv">5</span>,</span>
-<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>                  <span class="at">hs =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>                  <span class="at">min_count =</span> <span class="dv">5</span>,</span>
-<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a>                  <span class="at">stopwords =</span> stopwords_ru,</span>
-<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a>                  <span class="at">threads =</span> <span class="dv">6</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a><span class="co"># устанавливаем зерно, т.к. начальные веса устанавливаются произвольно</span></span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>) </span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">word2vec</span>(<span class="at">x =</span> corpus<span class="sc">$</span>text, </span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>                  <span class="at">type =</span> <span class="st">"skip-gram"</span>,</span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>                  <span class="at">dim =</span> <span class="dv">50</span>,</span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>                  <span class="at">window =</span> <span class="dv">5</span>,</span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>                  <span class="at">iter =</span> <span class="dv">20</span>,</span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>                  <span class="at">hs =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a>                  <span class="at">min_count =</span> <span class="dv">5</span>,</span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a>                  <span class="at">stopwords =</span> stopwords_ru,</span>
+<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a>                  <span class="at">threads =</span> <span class="dv">6</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Наша модель содержит эмбеддинги для слов; посмотрим на матрицу.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>emb <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(model)</span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(emb)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 5392   50</code></pre>
+<pre><code>[1] 5391   50</code></pre>
 </div>
 </div>
 <p>Создатели алгоритма <a href="http://arxiv.org/pdf/1310.4546">утверждают</a>, что эмбеддинги можно осмысленно складывать и вычитать. Проверим.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>vector <span class="ot">&lt;-</span> emb[<span class="st">"душа"</span>, ] <span class="sc">-</span> emb[<span class="st">"тело"</span>, ] <span class="sc">+</span> emb[<span class="st">"мудрость"</span>, ]</span>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>vector <span class="ot">&lt;-</span> emb[<span class="st">"душа"</span>, ] <span class="sc">+</span> emb[<span class="st">"мудрость"</span>, ]</span>
 <span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(model, vector, <span class="at">type =</span> <span class="st">"nearest"</span>, <span class="at">top_n =</span> <span class="dv">10</span>)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div data-pagedtable="false">
   <script data-pagedtable-source="" type="application/json">
-{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["similarity"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["rank"],"name":[3],"type":["int"],"align":["right"]}],"data":[{"1":"преисполниться","2":"0.9560018","3":"1"},{"1":"памятливый","2":"0.9091917","3":"2"},{"1":"заявлять","2":"0.9039537","3":"3"},{"1":"невежество","2":"0.8947872","3":"4"},{"1":"предосудительный","2":"0.8888631","3":"5"},{"1":"блага","2":"0.8880448","3":"6"},{"1":"стремление","2":"0.8861721","3":"7"},{"1":"мудр","2":"0.8860469","3":"8"},{"1":"обезьяна","2":"0.8806501","3":"9"},{"1":"заботишься","2":"0.8786756","3":"10"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["similarity"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["rank"],"name":[3],"type":["int"],"align":["right"]}],"data":[{"1":"разумность","2":"0.9592700","3":"1"},{"1":"храбрость","2":"0.9333650","3":"2"},{"1":"красота","2":"0.9223077","3":"3"},{"1":"добродетель","2":"0.9135678","3":"4"},{"1":"стремление","2":"0.9101415","3":"5"},{"1":"стремиться","2":"0.9098842","3":"6"},{"1":"одаренный","2":"0.8875182","3":"7"},{"1":"невежество","2":"0.8866452","3":"8"},{"1":"памятливый","2":"0.8828310","3":"9"},{"1":"мужество","2":"0.8817923","3":"10"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -872,7 +840,7 @@ chr (2): doc_id, translator
 <div class="cell-output-display">
 <div data-pagedtable="false">
   <script data-pagedtable-source="" type="application/json">
-{"columns":[{"label":["term1"],"name":[1],"type":["chr"],"align":["left"]},{"label":["term2"],"name":[2],"type":["chr"],"align":["left"]},{"label":["similarity"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["rank"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"дружба","2":"вражда","3":"0.8477883","4":"1"},{"1":"дружба","2":"единодуший","3":"0.8221261","4":"2"},{"1":"дружба","2":"влюбленность","3":"0.7690662","4":"3"},{"1":"дружба","2":"междоусобица","3":"0.7675757","4":"4"},{"1":"дружба","2":"царить","3":"0.7639841","4":"5"},{"1":"дружба","2":"раздор","3":"0.7408268","4":"6"},{"1":"дружба","2":"распря","3":"0.7387502","4":"7"},{"1":"дружба","2":"враждебной","3":"0.7267106","4":"8"},{"1":"дружба","2":"любовный","3":"0.7263063","4":"9"},{"1":"дружба","2":"неумеренный","3":"0.7239792","4":"10"},{"1":"казнь","2":"погребение","3":"0.8618528","4":"1"},{"1":"казнь","2":"побое","3":"0.8606144","4":"2"},{"1":"казнь","2":"виновный","3":"0.8483670","4":"3"},{"1":"казнь","2":"назначать","3":"0.8467737","4":"4"},{"1":"казнь","2":"боеть","3":"0.8433288","4":"5"},{"1":"казнь","2":"тюремный","3":"0.8317961","4":"6"},{"1":"казнь","2":"лишение","3":"0.8287328","4":"7"},{"1":"казнь","2":"убийство","3":"0.8166052","4":"8"},{"1":"казнь","2":"наказание","3":"0.8135238","4":"9"},{"1":"казнь","2":"преступник","3":"0.8073382","4":"10"},{"1":"учитель","2":"ученик","3":"0.9007040","4":"1"},{"1":"учитель","2":"обучать","3":"0.8746673","4":"2"},{"1":"учитель","2":"обучить","3":"0.8299605","4":"3"},{"1":"учитель","2":"обучаться","3":"0.8242442","4":"4"},{"1":"учитель","2":"учить","3":"0.8199607","4":"5"},{"1":"учитель","2":"кифарист","3":"0.8143464","4":"6"},{"1":"учитель","2":"грамматика","3":"0.8063276","4":"7"},{"1":"учитель","2":"гимнастика","3":"0.8010017","4":"8"},{"1":"учитель","2":"грамота","3":"0.7977185","4":"9"},{"1":"учитель","2":"учиться","3":"0.7922449","4":"10"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["term1"],"name":[1],"type":["chr"],"align":["left"]},{"label":["term2"],"name":[2],"type":["chr"],"align":["left"]},{"label":["similarity"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["rank"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"дружба","2":"вражда","3":"0.8596426","4":"1"},{"1":"дружба","2":"раздор","3":"0.7911661","4":"2"},{"1":"дружба","2":"единодуший","3":"0.7855912","4":"3"},{"1":"дружба","2":"влюбленность","3":"0.7813230","4":"4"},{"1":"дружба","2":"единодушие","3":"0.7577971","4":"5"},{"1":"дружба","2":"враждебной","3":"0.7556469","4":"6"},{"1":"дружба","2":"междоусобица","3":"0.7520292","4":"7"},{"1":"дружба","2":"вступать","3":"0.7455189","4":"8"},{"1":"дружба","2":"разлад","3":"0.7450246","4":"9"},{"1":"дружба","2":"любовь","3":"0.7341835","4":"10"},{"1":"казнь","2":"смертный","3":"0.8159162","4":"1"},{"1":"казнь","2":"смерть","3":"0.8046113","4":"2"},{"1":"казнь","2":"виновный","3":"0.8030724","4":"3"},{"1":"казнь","2":"назначать","3":"0.8009054","4":"4"},{"1":"казнь","2":"наказание","3":"0.7974051","4":"5"},{"1":"казнь","2":"изгнание","3":"0.7923877","4":"6"},{"1":"казнь","2":"приговорить","3":"0.7917243","4":"7"},{"1":"казнь","2":"лишение","3":"0.7899416","4":"8"},{"1":"казнь","2":"пострадавший","3":"0.7783973","4":"9"},{"1":"казнь","2":"ослушник","3":"0.7676555","4":"10"},{"1":"учитель","2":"ученик","3":"0.8645991","4":"1"},{"1":"учитель","2":"гимнастика","3":"0.8528544","4":"2"},{"1":"учитель","2":"обучать","3":"0.8317759","4":"3"},{"1":"учитель","2":"обучаться","3":"0.8060583","4":"4"},{"1":"учитель","2":"упражняться","3":"0.7884160","4":"5"},{"1":"учитель","2":"научить","3":"0.7869717","4":"6"},{"1":"учитель","2":"грамота","3":"0.7794751","4":"7"},{"1":"учитель","2":"учить","3":"0.7670885","4":"8"},{"1":"учитель","2":"музыка","3":"0.7655593","4":"9"},{"1":"учитель","2":"риторика","3":"0.7617877","4":"10"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -896,7 +864,7 @@ Attaching package: 'Matrix'</code></pre>
 <span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(viz)</span></code><button title="Скопировать текст" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 5392    2</code></pre>
+<pre><code>[1] 5391    2</code></pre>
 </div>
 </div>
 <div class="cell">
