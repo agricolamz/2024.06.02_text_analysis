@@ -12,6 +12,7 @@ execute:
   fig-width: 9
 editor: source
 lang: ru
+language: custom.yml
 df-print: paged
 number-sections: true
 bibliography: references.bib
@@ -30,7 +31,7 @@ editor_options:
 #| include: false
 
 library(tidyverse)
-theme_set(theme_bw())
+theme_set(theme_bw()+theme(legend.position = "none"))
 ```
 
 ## Введение в R
@@ -265,7 +266,7 @@ corpus |>
   geom_col()+
   facet_wrap(~doc_id, scales = "free")+
   scale_y_reordered()+
-  labs(x = NULL, y = NULL, fill = NULL)
+  labs(x = NULL, y = NULL)
 ```
 
 
@@ -335,7 +336,7 @@ corpus |>
   facet_wrap(~ doc_id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
-  labs(x = NULL, y = NULL, fill = NULL)
+  labs(x = NULL, y = NULL)
 ```
 
 
@@ -361,7 +362,7 @@ corpus |>
   facet_wrap(~ doc_id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
-  labs(x = NULL, y = NULL, fill = NULL)
+  labs(x = NULL, y = NULL)
 ```
 
 ## Мера tf-idf
@@ -388,8 +389,7 @@ mfw
 
 ```{r}
 selected_translators <- translators |> 
-  group_by(translator) |> 
-  summarise(n = n()) |> 
+  count(translator) |> 
   filter(n > 1) |> 
   pull(translator)
 
@@ -406,8 +406,8 @@ corpus_mx <- corpus |>
   group_by(doc_id) |> 
   mutate(total = sum(n),
          tf = n / total) |> 
-  select(-n, -total) |> 
   ungroup() |> 
+  select(-n, -total) |> 
   filter(word %in% mfw) |> 
   pivot_wider(names_from = word, 
               values_from = tf, 
@@ -446,27 +446,11 @@ corpus_mx |>
 Применим алгоритм к данным о переводчиках Платона. Функция `dist()` по умолчанию считает евклидово расстояние. 
 
 ```{r}
-rownames(corpus_mx) <- expected
+rownames(corpus_mx) <- str_c(expected, ": ", doc_id) 
 
-corpus_mx |> 
-  dist() |> 
-  hclust(method = "complete") |> 
-  plot()
-```
-
-
-Однако вычисления расстояния между текстами лучше подойдет не евклидово, а косинусное расстояние. В базовой `dist()` его нет, поэтому воспользуемся пакетом `philentropy`.
-
-```{r}
-dist_mx <- corpus_mx |> 
-  philentropy::distance(method = "cosine", use.row.names = TRUE) 
-```
-
-Преобразуем меру сходства в меру расстояния и передадим на кластеризацию. 
-
-```{r}
-dist_mx <- as.dist(1 - dist_mx)
-hc <- hclust(dist_mx)
+hc <- corpus_mx |> 
+  dist(method = "manhattan") |> 
+  hclust(method = "complete") 
 
 plot(hc)
 ```
@@ -474,23 +458,24 @@ plot(hc)
 Для получения меток кластеров, возникающих в результате рассечения дендрограммы на той или иной высоте, можно воспользоваться функцией `cutree()`.
 
 ```{r}
-cutree(hc, 5) |> head()
+cutree(hc, 6) |> head()
 ```
 
 Этим меткам можно назначить свой цвет.
 
 ```{r}
-#| fig-height: 10
-#| message: false
+#| fig-height: 7
+#| fig-width: 9
+
+par(mar=c(2,0,0,14))
 
 library(dendextend)
 hcd <- as.dendrogram(hc)
-par(mar=c(2,2,2,7))
-hcd %>% 
-  set("branches_k_color", k = 6) %>% 
-  set("labels_col", k=6) %>% 
-  plot(horiz = TRUE)
-abline(v=0.8, col="pink4",lty=2)
+hcd  |>  
+  set("branches_k_color", k = 6) |> 
+  set("labels_col", k = 6) |> 
+  plot(horiz = TRUE, cex = 3)
+abline(v = 0.8, col = "pink4", lty = 2)
 ```
 
 Важно помнить, что вид дерева может меняться в зависимости от числа mfw, выбранного вида связи и метрики расстояния. Чтобы определить наиболее устойчивые связи, применяют консенсусные деревья или консенсусные сети. 
@@ -501,7 +486,6 @@ abline(v=0.8, col="pink4",lty=2)
 Word2vec -- это полносвязаная нейросеть с одним скрытым слоем. Такое обучение называется не глубоким, а поверхностным (shallow).
 
 ```{r word2vec}
-#| cache: true
 
 library(word2vec)
 
@@ -510,7 +494,7 @@ corpus <- tibble(doc_id = list.files("data/plato_l"),
           mutate(text = tolower(text))
 
 # устанавливаем зерно, т.к. начальные веса устанавливаются произвольно
-set.seed(1234) 
+set.seed(2062024) 
 model <- word2vec(x = corpus$text, 
                   type = "skip-gram",
                   dim = 50,
@@ -535,6 +519,9 @@ dim(emb)
 ```{r}
 vector <- emb["душа", ] + emb["мудрость", ]
 predict(model, vector, type = "nearest", top_n = 10)
+
+vector <- emb["душа", ] - emb["мудрость", ]
+predict(model, vector, type = "nearest", top_n = 10)
 ```
 
 Кажется, это не совсем лишено смысла.  
@@ -548,7 +535,6 @@ predict(model, c("дружба", "казнь", "учитель"), type = "neares
 Получившуюся модель можно визуализировать. Для этого многомерное пространство нужно уменьшить до двух. Мы будем использовать алгоритм UMAP:
 
 ```{r umap}
-#| cache: true
 
 library(uwot)
 viz <- umap(emb,  n_neighbors = 15, n_threads = 2)
@@ -568,11 +554,28 @@ tibble(word = rownames(emb),
   geom_text(size = 2, alpha = 0.4)
 ```
 
+Попробуем посмотреть детали верхнего фрагмента:
+
+```{r}
+#| fig-width: 15
+#| fig-height: 15
+#| echo: false
+
+tibble(word = rownames(emb), 
+       V1 = viz[, 1], 
+       V2 = viz[, 2]) |> 
+  ggplot(aes(x = V1, y = V2, label = word)) + 
+  annotate(geom = "rect", ymin = 2, ymax = 4, xmin = -4, xmax = 4, alpha = 0.2, color = "tomato")+
+  geom_text(size = 2, alpha = 0.4)
+```
+
+Вот какие слова попали в эту область:
+
 ```{r}
 tibble(word = rownames(emb), 
        V1 = viz[, 1], 
        V2 = viz[, 2]) |>
-  filter(V2 > 2.5) |> 
+  filter(V2 > 2) |> 
   ggplot(aes(x = V1, y = V2, label = word)) + 
   geom_text(size = 2, alpha = 0.4)
 ```
