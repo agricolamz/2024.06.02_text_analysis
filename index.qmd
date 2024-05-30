@@ -44,7 +44,7 @@ theme_set(theme_bw())
     - [на Mac](https://cran.r-project.org/bin/macosx/)
     - [на Linux](https://cran.rstudio.com/bin/linux/), также можно установить из командной строки:
     
-```
+```{shell}
 sudo apt-get install r-cran-base
 ```
 
@@ -458,8 +458,9 @@ cutree(hc, 5) |> head()
 
 Этим меткам можно назначить свой цвет.
 
-```{r message=FALSE}
+```{r}
 #| fig-height: 10
+#| message: false
 
 library(dendextend)
 hcd <- as.dendrogram(hc)
