@@ -481,6 +481,22 @@ corpus_mx |>
 Применим алгоритм к данным о переводчиках Платона. Функция `dist()` по умолчанию считает евклидово расстояние. 
 
 ```{r}
+#| eval: false
+library(dendextend)
+
+corpus_mx |> 
+  dist(method = "manhattan") |> 
+  hclust(method = "complete") |> 
+  as.dendrogram() |> 
+  plot(horiz = TRUE, cex = 3)
+```
+
+```{r}
+#| echo: false
+#| fig-height: 7
+#| fig-width: 9
+par(mar=c(2,0,0,14))
+
 library(dendextend)
 
 corpus_mx |> 
@@ -617,7 +633,7 @@ tibble(word = rownames(emb),
        V1 = viz[, 1], 
        V2 = viz[, 2]) |> 
   ggplot(aes(x = V1, y = V2, label = word)) + 
-  annotate(geom = "rect", ymin = 2, ymax = 4, xmin = -4, xmax = 4, alpha = 0.2, color = "tomato")+
+  annotate(geom = "rect", ymin = 2, ymax = 3.6, xmin = -3.6, xmax = 3.6, alpha = 0.2, color = "tomato")+
   geom_text(size = 2, alpha = 0.4)
 ```
 
