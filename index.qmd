@@ -399,7 +399,7 @@ selected_translators
 Теперь подготовим матрицу с частотностями. 
 
 ```{r}
-corpus |> 
+corpus_mx <- corpus |> 
   filter(translator %in% selected_translators) |> 
   unnest_tokens(input = "text", output = "word", token = "words") |>
   count(doc_id, translator, word) |>
@@ -407,6 +407,7 @@ corpus |>
   mutate(total = sum(n),
          tf = n / total) |> 
   select(-n, -total) |> 
+  ungroup() |> 
   filter(word %in% mfw) |> 
   pivot_wider(names_from = word, 
               values_from = tf, 
