@@ -265,7 +265,7 @@ corpus |>
   geom_col()+
   facet_wrap(~doc_id, scales = "free")+
   scale_y_reordered()+
-  labs(x = NULL, y = NULL, color = NULL)
+  labs(x = NULL, y = NULL, fill = NULL)
 ```
 
 
@@ -335,7 +335,7 @@ corpus |>
   facet_wrap(~ doc_id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
-  labs(x = NULL, y = NULL, color = NULL)
+  labs(x = NULL, y = NULL, fill = NULL)
 ```
 
 
@@ -361,7 +361,7 @@ corpus |>
   facet_wrap(~ doc_id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
-  labs(x = NULL, y = NULL, color = NULL)
+  labs(x = NULL, y = NULL, fill = NULL)
 ```
 
 ## Мера tf-idf
