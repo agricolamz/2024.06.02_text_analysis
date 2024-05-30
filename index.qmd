@@ -207,6 +207,18 @@ getwd()
 
 Папка `data` содержит две вложенные: `plato_w` c переводами Платона и `plato_l` с _лемматизированными_ текстами. Нам понадобятся обе, поместите `data` со всем содержимым в рабочую директорию. 
 
+```
+data
+├── plato_l
+│   ├── alkiviad_ii.txt
+│   ├── ...
+│   └── zakony_x.txt
+└── plato_w
+    ├── alkiviad_ii.txt
+    ├── ...
+    └── zakony_x.txt
+```
+
 
 :::{.callout-note}
 Лемматизация --- автоматическое приведение слов к начальной форме (лемме). Здесь мы не будем рассказывать, как это делалось, но для интересующихся добавили [скрипт](https://github.com/agricolamz/2024.06.02_text_analysis/blob/main/helping_scripts/lemmatise.R) в репозиторий проекта. Можете попробовать запустить код самостоятельно. Для лемматизации использовалась модель [SynTagRus](https://universaldependencies.org/treebanks/ru_syntagrus/index.html). 
