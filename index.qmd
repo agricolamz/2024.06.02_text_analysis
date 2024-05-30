@@ -44,7 +44,7 @@ theme_set(theme_bw())
     - [на Mac](https://cran.r-project.org/bin/macosx/)
     - [на Linux](https://cran.rstudio.com/bin/linux/), также можно установить из командной строки:
     
-```{shell}
+```
 sudo apt-get install r-cran-base
 ```
 
@@ -238,11 +238,15 @@ corpus <- list.files("data/plato_w", full.names = TRUE) |>
 Прочитаем файл .csv со сведениями о переводчиках диалогов. 
 
 ```{r}
-url <- "https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/translators.csv"
-translators <- read_csv(url) 
+#| message: false
+translators <- read_csv("https://raw.githubusercontent.com/agricolamz/2024.06.02_text_analysis/main/translators.csv") 
+
+translators
 
 corpus <- corpus |> 
   left_join(translators)
+
+corpus
 ```
 
 ## Анализ частотности
@@ -261,7 +265,7 @@ corpus |>
   geom_col()+
   facet_wrap(~doc_id, scales = "free")+
   scale_y_reordered()+
-  labs(x = NULL, y = NULL)
+  labs(x = NULL, y = NULL, color = NULL)
 ```
 
 
@@ -331,7 +335,7 @@ corpus |>
   facet_wrap(~ doc_id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
-  xlab(NULL)
+  labs(x = NULL, y = NULL, color = NULL)
 ```
 
 
@@ -357,7 +361,7 @@ corpus |>
   facet_wrap(~ doc_id, scales = "free") +
   coord_flip() +
   scale_x_reordered() +
-  xlab(NULL)
+  labs(x = NULL, y = NULL, color = NULL)
 ```
 
 ## Мера tf-idf
