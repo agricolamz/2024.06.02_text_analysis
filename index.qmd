@@ -367,13 +367,52 @@ corpus |>
 
 ## Мера tf-idf
 
+```{r}
+corpus |> 
+  unnest_tokens(input = "text", output = "word", token = "words") |>
+  filter(str_detect(doc_id, "(timey)|(teetet)|(gorgiy)")) |> 
+  count(doc_id, word, sort = TRUE) |> 
+  bind_tf_idf(word, doc_id, n) |> 
+  arrange(desc(tf_idf)) |> 
+  group_by(doc_id) |> 
+  slice_max(order_by = tf_idf, n = 10) |> 
+  ggplot(aes(reorder_within(word, n, doc_id),
+             n, fill = doc_id)) +
+  geom_bar(stat="identity") +
+  facet_wrap(~ doc_id, scales = "free") +
+  coord_flip() +
+  scale_x_reordered() +
+  labs(x = NULL, y = NULL)
+```
+
+
+```{r}
+corpus |> 
+  unnest_tokens(input = "text", output = "bigram", token = "ngrams", n = 2) |>
+  filter(str_detect(doc_id, "(timey)|(teetet)|(gorgiy)")) |> 
+  separate(col = bigram, into = c("item1", "item2"), sep = " ") |> 
+  filter(!item1 %in% stopwords_ru, 
+         !item2 %in% stopwords_ru) |>
+  unite(bigram, c("item1", "item2"), sep = " ") |> 
+  count(doc_id, bigram, sort = TRUE) |> 
+  bind_tf_idf(bigram, doc_id, n) |> 
+  arrange(desc(tf_idf)) |> 
+  group_by(doc_id) |> 
+  slice_max(order_by = tf_idf, n = 10) |> 
+  ggplot(aes(reorder_within(bigram, n, doc_id),
+             n, fill = doc_id)) +
+  geom_bar(stat="identity") +
+  facet_wrap(~ doc_id, scales = "free") +
+  coord_flip() +
+  scale_x_reordered() +
+  labs(x = NULL, y = NULL)
+```
 
 ## Кластеризация на основе частотности языковых единиц
 
 ### Подготовка данных
 
 Кластеризация относится к числу методов обучения без учителя для обнаружения неизвестных групп (кластеров) в данных. Точнее, это целый набор методов. Из них **иерархическая кластеризация** возвращает результат в виде дерева (дендрограммы), которая позволяет увидеть все возможные кластеры. Иерархическая кластеризация проводится обычно на основе самой частотной лексики.
-
 
 ```{r}
 mfw <- corpus |> 
@@ -411,13 +450,9 @@ corpus_mx <- corpus |>
   filter(word %in% mfw) |> 
   pivot_wider(names_from = word, 
               values_from = tf, 
-              values_fill = 0) 
-
-# названия пригодятся при интерпретации
-doc_id <- corpus_mx$doc_id
-expected <- corpus_mx$translator
-
-corpus_mx <- corpus_mx |> 
+              values_fill = 0) |> 
+  mutate(label = str_c(translator, ": ", doc_id))  |> 
+  column_to_rownames("label") |> 
   select(-doc_id, -translator)
 ```
 
@@ -446,32 +481,50 @@ corpus_mx |>
 Применим алгоритм к данным о переводчиках Платона. Функция `dist()` по умолчанию считает евклидово расстояние. 
 
 ```{r}
-rownames(corpus_mx) <- str_c(expected, ": ", doc_id) 
+library(dendextend)
 
-hc <- corpus_mx |> 
+corpus_mx |> 
   dist(method = "manhattan") |> 
-  hclust(method = "complete") 
-
-plot(hc)
+  hclust(method = "complete") |> 
+  as.dendrogram() |> 
+  plot(horiz = TRUE, cex = 3)
 ```
 
 Для получения меток кластеров, возникающих в результате рассечения дендрограммы на той или иной высоте, можно воспользоваться функцией `cutree()`.
 
 ```{r}
-cutree(hc, 6) |> head()
+corpus_mx |> 
+  dist(method = "manhattan") |> 
+  hclust(method = "complete") |> 
+  cutree(6) |> 
+  head()
 ```
 
 Этим меткам можно назначить свой цвет.
 
 ```{r}
+#| eval: false
+
+corpus_mx |> 
+  dist(method = "manhattan") |> 
+  hclust(method = "complete") |> 
+  as.dendrogram() |> 
+  set("branches_k_color", k = 6) |> 
+  set("labels_col", k = 6) |> 
+  plot(horiz = TRUE, cex = 3)
+abline(v = 0.8, col = "pink4", lty = 2)
+```
+
+```{r}
+#| echo: false
 #| fig-height: 7
 #| fig-width: 9
-
 par(mar=c(2,0,0,14))
 
-library(dendextend)
-hcd <- as.dendrogram(hc)
-hcd  |>  
+corpus_mx |> 
+  dist(method = "manhattan") |> 
+  hclust(method = "complete") |> 
+  as.dendrogram() |> 
   set("branches_k_color", k = 6) |> 
   set("labels_col", k = 6) |> 
   plot(horiz = TRUE, cex = 3)
@@ -479,7 +532,6 @@ abline(v = 0.8, col = "pink4", lty = 2)
 ```
 
 Важно помнить, что вид дерева может меняться в зависимости от числа mfw, выбранного вида связи и метрики расстояния. Чтобы определить наиболее устойчивые связи, применяют консенсусные деревья или консенсусные сети. 
-
 
 ## Векторизация
 
