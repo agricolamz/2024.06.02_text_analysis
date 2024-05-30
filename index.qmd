@@ -399,14 +399,13 @@ selected_translators
 Теперь подготовим матрицу с частотностями. 
 
 ```{r}
-corpus_mx <- corpus |> 
+corpus |> 
   filter(translator %in% selected_translators) |> 
   unnest_tokens(input = "text", output = "word", token = "words") |>
   count(doc_id, translator, word) |>
   group_by(doc_id) |> 
-  mutate(total = sum(n)) |>
-  ungroup() |> 
-  mutate(tf = n / total) |>
+  mutate(total = sum(n),
+         tf = n / total) |> 
   select(-n, -total) |> 
   filter(word %in% mfw) |> 
   pivot_wider(names_from = word, 
@@ -435,7 +434,10 @@ $$ X_{new} = \frac{X - Mean(X)}{StDev(X)}$$
 corpus_mx <- corpus_mx |> 
   scale()
   
-round(colMeans(corpus_mx), 1) |>  head()
+corpus_mx |>
+  colMeans() |> 
+  round(1) |>  
+  head()
 ```
 
 Вид дерева будет зависеть от того, какой тип присоединения вы выберете. Обычно предпочитают среднее и полное, т.к. они приводят к более сбалансированным дендрограммам. Для функции `hclust()` в R по умолчанию выставлено значение аргумента `method = "complete"`.
@@ -445,16 +447,18 @@ round(colMeans(corpus_mx), 1) |>  head()
 ```{r}
 rownames(corpus_mx) <- expected
 
-hc.complete <- hclust(dist(corpus_mx), method = "complete")
-plot(hc.complete)
+corpus_mx |> 
+  dist() |> 
+  hclust(method = "complete") |> 
+  plot()
 ```
 
 
 Однако вычисления расстояния между текстами лучше подойдет не евклидово, а косинусное расстояние. В базовой `dist()` его нет, поэтому воспользуемся пакетом `philentropy`.
 
 ```{r}
-dist_mx <- corpus_mx %>% 
-  philentropy::distance(method = "cosine", use.row.names = T) 
+dist_mx <- corpus_mx |> 
+  philentropy::distance(method = "cosine", use.row.names = TRUE) 
 ```
 
 Преобразуем меру сходства в меру расстояния и передадим на кластеризацию. 
