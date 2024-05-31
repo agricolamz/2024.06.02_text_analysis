@@ -323,6 +323,15 @@ stopwords_ru <- sort(unique(stopwords_ru))
 stopwords_ru
 ```
 
+Удалим из списка слова "жизнь" и "человек".
+
+```{r}
+idx <- which(stopwords_ru == "жизнь" | stopwords_ru == "человек")
+
+idx
+stopwords_ru <- stopwords_ru[-idx]
+```
+
 К этому списку можно добавить любые пользовательские слова:
 
 ```{r}
@@ -382,7 +391,11 @@ corpus |>
 
 ## Мера tf-idf
 
+Сокращение tf-idf расшифровывается как term frequency - inverse document frequency.
+
 ![](images/04_tf_idf.png)
+
+Логарифм единицы равен нулю, поэтому если слово встречается во всех документах, его tf-idf равна нулю. Чем выше tf-idf, тем более характерно некое слово для некоторого документа. При этом относительная частотность тоже учитывается. 
 
 ```{r}
 corpus |> 
@@ -415,7 +428,7 @@ corpus |>
   bind_tf_idf(bigram, doc_id, n) |> 
   arrange(desc(tf_idf)) |> 
   group_by(doc_id) |> 
-  slice_max(order_by = tf_idf, n = 10) |> 
+  slice_head(n = 10) |> 
   ggplot(aes(reorder_within(bigram, n, doc_id),
              n, fill = doc_id)) +
   geom_bar(stat="identity") +
@@ -471,6 +484,8 @@ corpus_mx <- corpus |>
   mutate(label = str_c(translator, ": ", doc_id))  |> 
   column_to_rownames("label") |> 
   select(-doc_id, -translator)
+
+corpus_mx
 ```
 
 ### Иерархическая кластеризация
@@ -479,7 +494,7 @@ corpus_mx <- corpus |>
 
 Распространенное преобразование называется стандартизацией по Z-оценке: из значения признака Х вычитается среднее арифметическое, а результат делится на стандартное отклонение Х.
 
-$$ X_{new} = \frac{X - Mean(X)}{StDev(X)}$$
+$$ X_{new} = \frac{X - Mean(X)}{StDev(X)} $$
 
 Все средние после стандартизации должны быть в районе нуля. 
 
@@ -523,17 +538,7 @@ corpus_mx |>
   plot(horiz = TRUE, cex = 3)
 ```
 
-Для получения меток кластеров, возникающих в результате рассечения дендрограммы на той или иной высоте, можно воспользоваться функцией `cutree()`.
-
-```{r}
-corpus_mx |> 
-  dist(method = "manhattan") |> 
-  hclust(method = "complete") |> 
-  cutree(6) |> 
-  head()
-```
-
-Этим меткам можно назначить свой цвет.
+Количество кластеров будет зависеть от того, на какой высоте мы рассечем дерево. Кластерам можно назначить свой цвет.
 
 ```{r}
 #| eval: false
@@ -545,7 +550,6 @@ corpus_mx |>
   set("branches_k_color", k = 6) |> 
   set("labels_col", k = 6) |> 
   plot(horiz = TRUE, cex = 3)
-abline(v = 0.8, col = "pink4", lty = 2)
 ```
 
 ```{r}
@@ -579,7 +583,7 @@ corpus <- tibble(doc_id = list.files("data/plato_l"),
           mutate(text = tolower(text))
 
 # устанавливаем зерно, т.к. начальные веса устанавливаются произвольно
-set.seed(2062024) 
+set.seed(02062024) 
 model <- word2vec(x = corpus$text, 
                   type = "skip-gram",
                   dim = 50,
@@ -622,6 +626,7 @@ predict(model, c("дружба", "казнь", "учитель"), type = "neares
 ```{r umap}
 
 library(uwot)
+set.seed(02062024)
 viz <- umap(emb,  n_neighbors = 15, n_threads = 2)
 
 dim(viz)
