@@ -61,7 +61,7 @@ sessionInfo()$R.version$version.string |> cat()
 
 Некоторые люди не любят устанавливать лишние программы себе на компьютер, несколько вариантов есть и для них:
 
-- [RStudio cloud](https://posit.co/download/rstudio-desktop/) --- полная функциональность RStudio с некоторыми ограничениями;
+- [RStudio cloud](https://posit.cloud/) --- полная функциональность RStudio с некоторыми ограничениями;
 - [webR REPL](https://webr.r-wasm.org/latest/) --- ограниченная версия компилятора R, которая работает в вашем браузере и не требует никаких установок на компьютер
 - [Jupyter](https://jupyter.org/) ноутбуки;
 - [Google Colab](https://colab.research.google.com) (нужно в настройках переключить ядро);
@@ -127,7 +127,7 @@ mean(sqrt(abs(sin(1:100))))
 ```{r}
 #| eval: false
 
-install.packages(c("tidyverse", "tidytext", "stopwords", "broom", "word2vec", "uwot"))
+install.packages(c("tidyverse", "tidytext", "stopwords", "dendextend", "word2vec", "uwot"))
 ```
 
 Помните, что если вы установили пакет, это не значит, что функции пакета вам доступны. Пакет еще нужно включить
